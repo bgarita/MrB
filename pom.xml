@@ -61,7 +61,47 @@
             <artifactId>commons-compress</artifactId>
             <version>1.25.0</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+            <version>2.7.11</version>
+        </dependency>
+        <!--
+<dependency>
+    <groupId>Mail</groupId>
+    <artifactId>localMail</artifactId>
+    <version>1.6.2</version>
+</dependency>
+<dependency>
+    <groupId>javaxMail</groupId>
+    <artifactId>localJavaxMail</artifactId>
+    <version>1.6.2</version>
+</dependency>
+<dependency>
+    <groupId>Activation</groupId>
+    <artifactId>localActivation</artifactId>
+    <version>2.2.1</version>
+</dependency>
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-test</artifactId>
+            <version>2.7.11</version>
+            <scope>test</scope>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.8.2</version>
+            <scope>test</scope>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <artifactId>junit</artifactId>
+            <groupId>junit</groupId>
+            <version>4.11</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
