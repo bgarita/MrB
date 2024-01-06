@@ -1,6 +1,9 @@
 package com.infot.mrb.backup;
 
 import com.infot.mrb.database.DBConnection;
+import com.infot.mrb.mail.MailSender;
+import com.infot.mrb.utilities.Bitacora;
+import com.infot.mrb.utilities.Props;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -12,8 +15,10 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
@@ -34,17 +39,28 @@ public class BackupUI extends javax.swing.JFrame {
     private Boolean restoreInProgress;
     private List<ConnectionRecord> connectionRecords;
 
+    private boolean standalone;
+    private final Bitacora b = new Bitacora();
+    private int backupLife; // In days
+
     /**
      * Creates new form
+     *
+     * @param standalone
      */
-    public BackupUI() {
+    public BackupUI(boolean standalone) {
         initComponents();
+        this.standalone = standalone;
+
+        // DEBUG:
+        //this.standalone = true;
+        // END DEBUG
         this.backupInProgress = false;
         this.restoreInProgress = false;
 
         // Populate the connectionRecords list with all configured database connections.
         loadConnectionRecords();
-        
+
         // Set the user and password fields with the right information
         // according to the selected server (from the combo box).
         // If combo is null initialize it.
@@ -63,11 +79,21 @@ public class BackupUI extends javax.swing.JFrame {
         // Populate the database combo acconding to the selected server.
         loadDatabaseNames();
         
+        setBackupLife();
+        
+        // Delete expired backups
+        deleteExpiredBackups();
+        
         // Populate the JTable with backup/restore data records.
         loadData();
-        
+
         // Set default backup description with selected server + database + today's date.
         setDefaultDescription();
+
+        // If MrB is working in standalone mode then start doing the work
+        if (standalone) {
+            doAll();
+        }
     }
 
     /**
@@ -559,7 +585,7 @@ public class BackupUI extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnBackupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBackupActionPerformed
-        
+
         // Validate data
         if (!isValidData()) {
             return;
@@ -570,22 +596,20 @@ public class BackupUI extends javax.swing.JFrame {
 
         // Get selected server name
         String serverName = this.cboServer.getSelectedItem().toString();
-
+        Connection conn = null;
         // Save configuration before starting the backup
         // No problem is configuration is not saved, but cannot continue if connection is not successful
         try {
             // Try connection before saving the configuration.
-            Connection conn = DBConnection.getConnection(
+            conn = DBConnection.getConnection(
                     this.txtUser.getText(),
                     this.txtPassword.getPassword(), serverName, getSchema());
             if (conn == null) {
-                JOptionPane.showMessageDialog(null, """
-                                                    Unable to connect to database.
-                                                    Please, check user and/or password.""",
-                        "ERROR",
-                        JOptionPane.ERROR_MESSAGE);
+                String msg = """
+                            Unable to connect to database.
+                            Please, check user and/or password.""";
                 this.backupInProgress = false;
-                return;
+                throw new Exception(msg);
             }
 
             // Save configuration
@@ -593,14 +617,23 @@ public class BackupUI extends javax.swing.JFrame {
 
         } catch (Exception ex) {
             Logger.getLogger(BackupUI.class.getName()).log(Level.WARNING, null, ex);
-            JOptionPane.showMessageDialog(
-                    null,
-                    ex.getMessage() + "\nConfiguration won't be saved.",
-                    "Warning",
-                    JOptionPane.WARNING_MESSAGE);
+            String msg = ex.getMessage() + "\nConfiguration won't be saved.";
+            if (!this.standalone) {
+                JOptionPane.showMessageDialog(
+                        null,
+                        msg,
+                        "Warning",
+                        JOptionPane.WARNING_MESSAGE);
+            } else {
+                sendMailAlert(msg, "ERROR", "Check log file");
+            }
         }
 
         this.ProgressBar.setValue(0);
+
+        if (conn == null) {
+            return;
+        }
 
         // If connection was successful, go ahead and make the backup.
         Backup backup = new Backup();
@@ -609,7 +642,13 @@ public class BackupUI extends javax.swing.JFrame {
         backup.setDatabase(database);
         backup.setBackupUI(this);
         this.backupInProgress = true;
-        backup.start();
+        
+        if (!this.standalone) {
+            backup.start();
+        } else {
+            backup.createBackup();
+        }
+        
     }//GEN-LAST:event_btnBackupActionPerformed
 
     private void btnCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelActionPerformed
@@ -763,6 +802,10 @@ public class BackupUI extends javax.swing.JFrame {
             return;
         }
 
+        if (this.standalone) {
+            return;
+        }
+
         JOptionPane.showMessageDialog(null,
                 "Uncompressed backups are temporary.",
                 "WARNING",
@@ -831,7 +874,7 @@ public class BackupUI extends javax.swing.JFrame {
             conn = DBConnection.getConnection(
                     this.txtUser.getText(),
                     this.txtPassword.getPassword(), serverName, getSchema());
-            
+
             // Save configuration before restoring database.
             saveConfiguration();
         } catch (Exception ex) {
@@ -894,13 +937,10 @@ public class BackupUI extends javax.swing.JFrame {
             java.util.logging.Logger.getLogger(BackupUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
-        //</editor-fold>
-        //</editor-fold>
-        //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(() -> {
-            new BackupUI().setVisible(true);
+            new BackupUI(false).setVisible(true);
         });
     }
 
@@ -948,7 +988,8 @@ public class BackupUI extends javax.swing.JFrame {
     /**
      * Set user and password according to the options the user selected, this
      * parameters are taken from the last valid user entry (saved). Last valid
-     * configuration (user & password) are crypted and stored in the system database.
+     * configuration (user & password) are crypted and stored in the system
+     * database.
      *
      * @author: Bosco Garita
      * @since : 2023-10-02
@@ -961,11 +1002,16 @@ public class BackupUI extends javax.swing.JFrame {
                 Combo.populate(cboServer, true, false);
             } catch (Exception ex) {
                 Logger.getLogger(BackupUI.class.getName()).log(Level.SEVERE, null, ex);
-                JOptionPane.showMessageDialog(
-                    null,
-                    ex.getMessage() + "\nUnable to load servers.",
-                    "Warning",
-                    JOptionPane.WARNING_MESSAGE);
+                String msg = ex.getMessage() + "\nUnable to load servers.";
+                if (!this.standalone) {
+                    JOptionPane.showMessageDialog(
+                            null,
+                            msg,
+                            "Warning",
+                            JOptionPane.WARNING_MESSAGE);
+                } else {
+                    sendMailAlert(msg, "ERROR", "Check server configuration");
+                }
             }
         }
 
@@ -980,6 +1026,12 @@ public class BackupUI extends javax.swing.JFrame {
     }
 
     private void validateAndClose() {
+        // Do not validate anything when running in standalone mode.
+        if (this.standalone) {
+            dispose();
+            return;
+        }
+
         String msg = "";
         boolean closeWindow = true;
 
@@ -1090,11 +1142,16 @@ public class BackupUI extends javax.swing.JFrame {
             conn = DBConnection.getBkConnection();
         } catch (ClassNotFoundException | SQLException ex) {
             Logger.getLogger(BackupUI.class.getName()).log(Level.SEVERE, null, ex);
-            JOptionPane.showMessageDialog(
-                    null,
-                    ex.getMessage() + "\nBackup information will not be saved.",
-                    "Warning",
-                    JOptionPane.WARNING_MESSAGE);
+            String msg = ex.getMessage() + "\nBackup information will not be saved.";
+            if (!this.standalone) {
+                JOptionPane.showMessageDialog(
+                        null,
+                        msg,
+                        "Warning",
+                        JOptionPane.WARNING_MESSAGE);
+            } else {
+                sendMailAlert(msg, "ERROR", "loadData()");
+            }
             return;
         }
 
@@ -1125,7 +1182,7 @@ public class BackupUI extends javax.swing.JFrame {
                 this.tblDB.setValueAt(rs.getString("description"), row, column);
                 column++;
                 String zipFile = rs.getString("zip_file_name");
-                if (!new File(zipFile).exists()) {
+                if (!new File(zipFile).exists() && !this.standalone) {
                     String msg = "File [" + zipFile + "] does not exist.\n"
                             + "Make sure you did not change its name or move it to a different directory.";
                     JOptionPane.showMessageDialog(null, msg, "Warning", JOptionPane.WARNING_MESSAGE);
@@ -1151,11 +1208,15 @@ public class BackupUI extends javax.swing.JFrame {
             conn.close();
         } catch (Exception ex) {
             Logger.getLogger(BackupUI.class.getName()).log(Level.SEVERE, null, ex);
-            JOptionPane.showMessageDialog(
-                    null,
-                    ex,
-                    "ERROR",
-                    JOptionPane.ERROR_MESSAGE);
+            if (!this.standalone) {
+                JOptionPane.showMessageDialog(
+                        null,
+                        ex,
+                        "ERROR",
+                        JOptionPane.ERROR_MESSAGE);
+            } else {
+                sendMailAlert(ex.getMessage(), "ERROR", "loadData()");
+            }
         }
     }
 
@@ -1244,10 +1305,14 @@ public class BackupUI extends javax.swing.JFrame {
             ps.close();
         } catch (Exception ex) {
             Logger.getLogger(BackupUI.class.getName()).log(Level.SEVERE, null, ex);
-            JOptionPane.showMessageDialog(null,
-                    ex.getMessage(),
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
+            if (!this.standalone) {
+                JOptionPane.showMessageDialog(null,
+                        ex.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            } else {
+                sendMailAlert(ex.getMessage(), "ERROR", "loadData()");
+            }
         }
     } // end loadDatabaseNames
 
@@ -1294,10 +1359,17 @@ public class BackupUI extends javax.swing.JFrame {
                 connectionRecords.add(cr);
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(null,
-                    ex.getMessage(),
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
+            b.writeToLog(ex.getMessage());
+
+            // If the application is running in interactive mode, show the alert window, else send a mail.
+            if (!this.isStandalone()) {
+                JOptionPane.showMessageDialog(null,
+                        ex.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            } else {
+                sendMailAlert(ex.getMessage(), "ERROR", "loadData()");
+            }
         }
     }
 
@@ -1326,35 +1398,246 @@ public class BackupUI extends javax.swing.JFrame {
 
     private boolean isValidData() {
         if (this.cboBD.getSelectedIndex() < 0) {
-            JOptionPane.showMessageDialog(null,
-                    "No database selected.",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-            this.cboBD.requestFocusInWindow();
+            String msg = "No database selected.";
+            if (!this.standalone) {
+                JOptionPane.showMessageDialog(null,
+                        msg,
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                this.cboBD.requestFocusInWindow();
+            } else {
+                sendMailAlert(msg, "ERROR", "Database selection");
+            }
             return false;
         }
-        
+
         if (this.backupInProgress) {
-            JOptionPane.showMessageDialog(null,
-                    "Only one backup can be excecuted at a time.",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
+            String msg = "Only one backup can be excecuted at a time.";
+            if (!this.standalone) {
+                JOptionPane.showMessageDialog(null,
+                        msg,
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            } else {
+                sendMailAlert(msg, "ERROR", "Backup in progress check");
+            }
             return false;
         }
-        
+
         // Make sure a description is in place for this backup
         if (this.txtBackupDescription.getText().isBlank()) {
-            JOptionPane.showMessageDialog(
-                    null,
-                    "Please, provide a description for this backup.",
-                    "ERROR",
-                    JOptionPane.ERROR_MESSAGE);
-            this.txtBackupDescription.requestFocusInWindow();
+            String msg = "Please, provide a description for this backup.";
+            if (!this.standalone) {
+                JOptionPane.showMessageDialog(
+                        null,
+                        msg,
+                        "ERROR",
+                        JOptionPane.ERROR_MESSAGE);
+                this.txtBackupDescription.requestFocusInWindow();
+            } else {
+                sendMailAlert(msg, "ERROR", "Backup description");
+            }
             return false;
         }
-        
+
         // If everything is ok return true
         return true;
     }
 
+    public boolean isStandalone() {
+        return this.standalone;
+    }
+
+    public void setStandalone(boolean standalone) {
+        this.standalone = standalone;
+    }
+
+    public void sendMailAlert(String message, String h1, String h2) {
+
+        try {
+            final MailSender mailSender = new MailSender();
+            String html = "<h1>" + h1 + "</h1><h2>" + h2 + "<h2><br><p>" + message + "</p>";
+            boolean sent = mailSender.sendHTMLMail("bgarita@hotmail.com", "MrB notification", html);
+            if (!sent) {
+                throw new Exception("Unable to send mail alerts");
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(BackupUI.class.getName()).log(Level.SEVERE, null, ex);
+            b.writeToLog(ex.getMessage());
+        }
+    }
+
+    private void doAll() {
+        /*
+        1. Read values from a properties file and fill-in the required fields.
+        2. Run validations.
+        3. Run the backup process.
+        
+        Note:
+        The property files used here do not contain any sensitive data. User, password,
+        port and any other configuration item is taken from the database when the system
+        starts.
+        Here we only use server and database properties in order to set thouse values
+        to set the necessary validation data.
+         */
+
+        checkWaiting();
+
+        // Server
+        String serverPropsFile = "server.properties";
+
+        // Databases
+        String databasePropsFile = "dblist.properties";
+
+        Properties serverProps;
+        Properties dbListProps;
+
+        try {
+            serverProps = Props.getProps(new File(serverPropsFile));
+            this.cboServer.setSelectedItem(serverProps.getProperty("server"));
+            if (this.cboServer.getSelectedIndex() < 0) {
+                String msg = "No configuration found for server [" + serverProps.getProperty("server") + "]"
+                        + "Make sure " + serverPropsFile + " contains the right server name.";
+                throw new Exception(msg);
+            }
+            this.cboServerActionPerformed(null);
+
+            dbListProps = Props.getProps(new File(databasePropsFile));
+            Enumeration<?> en = dbListProps.propertyNames();
+            List<String> databases = new ArrayList<>();
+
+            while (en.hasMoreElements()) {
+                String key = (String) en.nextElement();
+                String value = dbListProps.getProperty(key);
+                databases.add(value);
+            } // end while
+
+            // Now lets validate the database list at the time the job is being executed.
+            for (String database : databases) {
+                System.out.println("----- Running backup for " + database + " -----");
+                checkWaiting();
+                this.cboBD.setSelectedItem(database);
+                if (this.cboBD.getSelectedIndex() < 0) {
+                    String msg = "No configuration found for database [" + database + "]"
+                            + "Make sure " + databasePropsFile + " contains the right database names.";
+                    throw new Exception(msg);
+                }
+                this.cboBDActionPerformed(null);
+
+                this.btnBackupActionPerformed(null);
+            }
+        } catch (Exception ex) {
+            sendMailAlert(ex.getMessage(), "ERROR", "Standalone running");
+        }
+    }
+
+    private void checkWaiting() {
+        long waitTime = 0;
+        long maxWaitTime = 1000 * 60 * 60 * 2; // 2 hours
+        while (this.backupInProgress) {
+            waitTime += 1000 * 15;
+            try {
+                if (waitTime > maxWaitTime) {
+                    String msg = "Looks like a backup process is still in place.  The maximum wait time has been exceeded.";
+                    throw new Exception(msg);
+                }
+
+                Thread.sleep(1000 * 15);
+            } catch (Exception ex) {
+                sendMailAlert(ex.getMessage(), "ERROR", "Timeout");
+                dispose();
+            }
+        }
+    }
+
+    public final void setBackupLife() {
+        try {
+            Properties life = Props.getProps(new File("backupslife.properties"));
+            String keep = life.getProperty("keep");
+            String period = life.getProperty("period");
+
+            // Convert to days (use base 360 for months).
+            this.backupLife = period.equals("days") ? Integer.parseInt(keep) : Integer.parseInt(keep) * 30;
+        } catch (IOException ex) {
+            this.backupLife = 60 * 5; // defaults to 5 years
+        }
+    }
+
+    /**
+     * Get the number of days that backups are kept.
+     *
+     * @return int number of days.
+     */
+    public int getBackupLife() {
+        return backupLife;
+    }
+
+    private void deleteExpiredBackups() {
+        List<Integer> ids = new ArrayList<>();
+        List<String> files = new ArrayList<>();
+        String sql = "SELECT id, zip_file_name from bk.backup WHERE DATEDIFF(NOW(), created_on) > ?";
+        try (Connection bkCon = DBConnection.getBkConnection(); PreparedStatement ps = bkCon.prepareStatement(sql,
+                ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
+            ps.setInt(1, this.backupLife);
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                ids.add(rs.getInt("id"));
+                files.add(rs.getString("zip_file_name"));
+            }
+        } catch (Exception ex) {
+            b.writeToLog(ex.getMessage());
+
+            // If the application is running in interactive mode, show the alert window, else send a mail.
+            if (!this.isStandalone()) {
+                JOptionPane.showMessageDialog(null,
+                        ex.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            } else {
+                sendMailAlert(ex.getMessage(), "ERROR", "loadData()");
+            }
+        }
+
+        sql = "Delete from bk.backup WHERE id = ?";
+        File file = null;
+        try (Connection bkCon = DBConnection.getBkConnection(); PreparedStatement ps = bkCon.prepareStatement(sql)) {
+            for (int i = 0; i < ids.size(); i++) {
+                int id = ids.get(i);
+                bkCon.setAutoCommit(false); // Start transaction
+                ps.setInt(1, id);
+                ps.executeUpdate();
+                
+                // Delete file and check if it was successfull. If so, commit the transaction
+                file = new File(files.get(i));
+                boolean deleted = file.delete();
+                
+                // Commit or rollback the transaction.
+                // The OR scenario takes place when the file was manually removed from the OS.
+                if (deleted || !file.exists()) {
+                    bkCon.commit();
+                } else {
+                    bkCon.rollback();
+                }
+                
+                bkCon.setAutoCommit(true);
+            }
+        } catch (Exception ex) {
+            // No need to execute a rollback since it executes implicitly when 
+            // the connection closes before the transaction is not commited.
+            String msg = 
+                    "FAIL when trying to delete expired backups [" + (file != null ? file.getAbsolutePath() : "??") + "]. \n" + ex.getMessage();
+            b.writeToLog(msg);
+
+            // If the application is running in interactive mode, show the alert window, else send a mail.
+            if (!this.isStandalone()) {
+                JOptionPane.showMessageDialog(null,
+                        msg,
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            } else {
+                sendMailAlert(msg, "ERROR", "deleteExpiredBackups()");
+            }
+        }
+    }
 }

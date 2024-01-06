@@ -83,6 +83,12 @@
     <version>2.2.1</version>
 </dependency>
         -->
+        <!--
+        NOTA IMPORTANE:
+        Este proyect se debe construir desde la línea de comando para evitar que maven intente buscar los tests
+        ya que esa parte no funciona por alguna razón.
+        call mvn clean install -DskipTests
+        -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-test</artifactId>
@@ -110,7 +116,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.infot.mrb.backup.BackupUI</mainClass>
+                            <mainClass>com.infot.mrb.backup.Run</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

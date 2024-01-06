@@ -29,7 +29,7 @@ public class Backup extends Thread {
         createBackup();
     }
 
-    private void createBackup() {
+    public void createBackup() {
         FileParts fileParts = new FileParts();
 
         String schema = backupUI.getSchema();
@@ -39,11 +39,16 @@ public class Backup extends Thread {
         try {
             conn = DBConnection.getConnection(user, password, serverName, schema);
         } catch (Exception ex) {
-            JOptionPane.showInternalMessageDialog(
-                    null, 
-                    ex.getMessage(),
-                    "Error", 
-                    JOptionPane.ERROR_MESSAGE);
+            if (!backupUI.isStandalone()) {
+                JOptionPane.showInternalMessageDialog(
+                        null,
+                        ex.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            } else {
+                backupUI.sendMailAlert(ex.getMessage(), "ERROR", "Testing connection");
+            }
+
             backupUI.setBackupInProgress(false);
             return;
         }
@@ -58,7 +63,7 @@ public class Backup extends Thread {
 
         try {
             MySQL engine = new MySQL(conn, schema, 12); // Connection, schema & records per page
-            
+
             // Create a directory with the name of the database
             folder = new File(database);
             if (!folder.exists() || !folder.isDirectory()) {
@@ -213,25 +218,35 @@ public class Backup extends Thread {
 
             conn.close();
         } catch (IOException | ClassNotFoundException | SQLException ex) {
-            JOptionPane.showInternalMessageDialog(null, ex.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
+            if (!backupUI.isStandalone()) {
+                JOptionPane.showInternalMessageDialog(null, ex.getMessage(),
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            } else {
+                backupUI.sendMailAlert(ex.getMessage(), "ERROR", "Backup progress");
+            }
             this.backupUI.setBackupInProgress(false);
             return;
         }
 
         System.out.println("Backup complete!");
 
-        JOptionPane.showMessageDialog(null,
-                "Backup complete",
-                "Message",
-                JOptionPane.INFORMATION_MESSAGE);
+        if (!backupUI.isStandalone()) {
+            JOptionPane.showMessageDialog(null,
+                    "Backup complete",
+                    "Message",
+                    JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            backupUI.sendMailAlert("Backup complete for " + schema, "SUCCESS", "Backup complete");
+            System.out.println("\n\n---- WARNING: Do not close this window ----");
+        }
+
         this.backupUI.setBackupInProgress(false);
 
         // Reset progress bar
         this.backupUI.getProgressBar().setValue(0);
 
         try {
-            if (!this.backupUI.getIsCompressed()) {
+            if (!this.backupUI.getIsCompressed() && !backupUI.isStandalone()) {
                 JOptionPane.showMessageDialog(null,
                         """
                         This backup is temporary and it will not be reflected in the restore tab.
