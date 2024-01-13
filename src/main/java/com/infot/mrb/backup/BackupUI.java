@@ -4,10 +4,14 @@ import com.infot.mrb.database.DBConnection;
 import com.infot.mrb.mail.MailSender;
 import com.infot.mrb.utilities.Bitacora;
 import com.infot.mrb.utilities.Props;
+import com.infot.mrb.utilities.Ut;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -78,12 +82,12 @@ public class BackupUI extends javax.swing.JFrame {
 
         // Populate the database combo acconding to the selected server.
         loadDatabaseNames();
-        
+
         setBackupLife();
-        
+
         // Delete expired backups
         deleteExpiredBackups();
-        
+
         // Populate the JTable with backup/restore data records.
         loadData();
 
@@ -625,7 +629,7 @@ public class BackupUI extends javax.swing.JFrame {
                         "Warning",
                         JOptionPane.WARNING_MESSAGE);
             } else {
-                sendMailAlert(msg, "ERROR", "Check log file");
+                sendMailAlert(msg, false);
             }
         }
 
@@ -642,13 +646,13 @@ public class BackupUI extends javax.swing.JFrame {
         backup.setDatabase(database);
         backup.setBackupUI(this);
         this.backupInProgress = true;
-        
+
         if (!this.standalone) {
             backup.start();
         } else {
             backup.createBackup();
         }
-        
+
     }//GEN-LAST:event_btnBackupActionPerformed
 
     private void btnCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelActionPerformed
@@ -1010,7 +1014,7 @@ public class BackupUI extends javax.swing.JFrame {
                             "Warning",
                             JOptionPane.WARNING_MESSAGE);
                 } else {
-                    sendMailAlert(msg, "ERROR", "Check server configuration");
+                    sendMailAlert(msg, false);
                 }
             }
         }
@@ -1142,7 +1146,7 @@ public class BackupUI extends javax.swing.JFrame {
             conn = DBConnection.getBkConnection();
         } catch (ClassNotFoundException | SQLException ex) {
             Logger.getLogger(BackupUI.class.getName()).log(Level.SEVERE, null, ex);
-            String msg = ex.getMessage() + "\nBackup information will not be saved.";
+            String msg = ex.getMessage() + "\nBackup information will not be saved.\nloadData()";
             if (!this.standalone) {
                 JOptionPane.showMessageDialog(
                         null,
@@ -1150,7 +1154,7 @@ public class BackupUI extends javax.swing.JFrame {
                         "Warning",
                         JOptionPane.WARNING_MESSAGE);
             } else {
-                sendMailAlert(msg, "ERROR", "loadData()");
+                sendMailAlert(msg, false);
             }
             return;
         }
@@ -1211,11 +1215,11 @@ public class BackupUI extends javax.swing.JFrame {
             if (!this.standalone) {
                 JOptionPane.showMessageDialog(
                         null,
-                        ex,
+                        ex + "\n loadData()",
                         "ERROR",
                         JOptionPane.ERROR_MESSAGE);
             } else {
-                sendMailAlert(ex.getMessage(), "ERROR", "loadData()");
+                sendMailAlert(ex.getMessage(), false);
             }
         }
     }
@@ -1311,7 +1315,7 @@ public class BackupUI extends javax.swing.JFrame {
                         "Error",
                         JOptionPane.ERROR_MESSAGE);
             } else {
-                sendMailAlert(ex.getMessage(), "ERROR", "loadData()");
+                sendMailAlert(ex.getMessage() + "\nloadData()", false);
             }
         }
     } // end loadDatabaseNames
@@ -1368,7 +1372,7 @@ public class BackupUI extends javax.swing.JFrame {
                         "Error",
                         JOptionPane.ERROR_MESSAGE);
             } else {
-                sendMailAlert(ex.getMessage(), "ERROR", "loadData()");
+                sendMailAlert(ex.getMessage() + "\nloadData()", false);
             }
         }
     }
@@ -1406,7 +1410,7 @@ public class BackupUI extends javax.swing.JFrame {
                         JOptionPane.ERROR_MESSAGE);
                 this.cboBD.requestFocusInWindow();
             } else {
-                sendMailAlert(msg, "ERROR", "Database selection");
+                sendMailAlert(msg, false);
             }
             return false;
         }
@@ -1419,7 +1423,7 @@ public class BackupUI extends javax.swing.JFrame {
                         "Error",
                         JOptionPane.ERROR_MESSAGE);
             } else {
-                sendMailAlert(msg, "ERROR", "Backup in progress check");
+                sendMailAlert(msg, false);
             }
             return false;
         }
@@ -1435,7 +1439,7 @@ public class BackupUI extends javax.swing.JFrame {
                         JOptionPane.ERROR_MESSAGE);
                 this.txtBackupDescription.requestFocusInWindow();
             } else {
-                sendMailAlert(msg, "ERROR", "Backup description");
+                sendMailAlert(msg, false);
             }
             return false;
         }
@@ -1452,15 +1456,24 @@ public class BackupUI extends javax.swing.JFrame {
         this.standalone = standalone;
     }
 
-    public void sendMailAlert(String message, String h1, String h2) {
+    public void sendMailAlert(String message, boolean success) {
 
         try {
             final MailSender mailSender = new MailSender();
-            String html = "<h1>" + h1 + "</h1><h2>" + h2 + "<h2><br><p>" + message + "</p>";
-            boolean sent = mailSender.sendHTMLMail("bgarita@hotmail.com", "MrB notification", html);
+            FileSystem fs = FileSystems.getDefault();
+            Path path = fs.getPath("bkmsg.html");
+            String text = Ut.fileToString(path);
+            text = text.replace("[msg]", message);
+            if (!success) {
+                text = text.replace("blue", "red");
+            }
+
+            //String html = "<h1>" + h1 + "</h1><h2>" + h2 + "<h2><br><p>" + message + "</p>";
+            boolean sent = mailSender.sendHTMLMail("bgarita@hotmail.com", "MrB notification", text);
             if (!sent) {
                 throw new Exception("Unable to send mail alerts");
             }
+            
         } catch (Exception ex) {
             Logger.getLogger(BackupUI.class.getName()).log(Level.SEVERE, null, ex);
             b.writeToLog(ex.getMessage());
@@ -1527,7 +1540,7 @@ public class BackupUI extends javax.swing.JFrame {
                 this.btnBackupActionPerformed(null);
             }
         } catch (Exception ex) {
-            sendMailAlert(ex.getMessage(), "ERROR", "Standalone running");
+            sendMailAlert(ex.getMessage(), false);
         }
     }
 
@@ -1542,9 +1555,9 @@ public class BackupUI extends javax.swing.JFrame {
                     throw new Exception(msg);
                 }
 
-                Thread.sleep(1000 * 15);
+                Thread.sleep(1000 * 15L);
             } catch (Exception ex) {
-                sendMailAlert(ex.getMessage(), "ERROR", "Timeout");
+                sendMailAlert(ex.getMessage() + "\nTiemout", false);
                 dispose();
             }
         }
@@ -1595,7 +1608,7 @@ public class BackupUI extends javax.swing.JFrame {
                         "Error",
                         JOptionPane.ERROR_MESSAGE);
             } else {
-                sendMailAlert(ex.getMessage(), "ERROR", "loadData()");
+                sendMailAlert(ex.getMessage() + "\nloadData()", false);
             }
         }
 
@@ -1607,11 +1620,11 @@ public class BackupUI extends javax.swing.JFrame {
                 bkCon.setAutoCommit(false); // Start transaction
                 ps.setInt(1, id);
                 ps.executeUpdate();
-                
+
                 // Delete file and check if it was successfull. If so, commit the transaction
                 file = new File(files.get(i));
                 boolean deleted = file.delete();
-                
+
                 // Commit or rollback the transaction.
                 // The OR scenario takes place when the file was manually removed from the OS.
                 if (deleted || !file.exists()) {
@@ -1619,14 +1632,14 @@ public class BackupUI extends javax.swing.JFrame {
                 } else {
                     bkCon.rollback();
                 }
-                
+
                 bkCon.setAutoCommit(true);
             }
         } catch (Exception ex) {
             // No need to execute a rollback since it executes implicitly when 
             // the connection closes before the transaction is not commited.
-            String msg = 
-                    "FAIL when trying to delete expired backups [" + (file != null ? file.getAbsolutePath() : "??") + "]. \n" + ex.getMessage();
+            String msg
+                    = "FAIL when trying to delete expired backups [" + (file != null ? file.getAbsolutePath() : "??") + "]. \n" + ex.getMessage();
             b.writeToLog(msg);
 
             // If the application is running in interactive mode, show the alert window, else send a mail.
@@ -1636,7 +1649,7 @@ public class BackupUI extends javax.swing.JFrame {
                         "Error",
                         JOptionPane.ERROR_MESSAGE);
             } else {
-                sendMailAlert(msg, "ERROR", "deleteExpiredBackups()");
+                sendMailAlert(msg, false);
             }
         }
     }

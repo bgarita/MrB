@@ -46,7 +46,7 @@ public class Backup extends Thread {
                         "Error",
                         JOptionPane.ERROR_MESSAGE);
             } else {
-                backupUI.sendMailAlert(ex.getMessage(), "ERROR", "Testing connection");
+                backupUI.sendMailAlert(ex.getMessage() + "\nTesting connection", false);
             }
 
             backupUI.setBackupInProgress(false);
@@ -222,7 +222,7 @@ public class Backup extends Thread {
                 JOptionPane.showInternalMessageDialog(null, ex.getMessage(),
                         "Error", JOptionPane.ERROR_MESSAGE);
             } else {
-                backupUI.sendMailAlert(ex.getMessage(), "ERROR", "Backup progress");
+                backupUI.sendMailAlert(ex.getMessage() + "\nBackup progress", false);
             }
             this.backupUI.setBackupInProgress(false);
             return;
@@ -236,7 +236,7 @@ public class Backup extends Thread {
                     "Message",
                     JOptionPane.INFORMATION_MESSAGE);
         } else {
-            backupUI.sendMailAlert("Backup complete for " + schema, "SUCCESS", "Backup complete");
+            backupUI.sendMailAlert("Backup complete for " + schema, true);
             System.out.println("\n\n---- WARNING: Do not close this window ----");
         }
 

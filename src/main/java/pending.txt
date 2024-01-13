@@ -1,12 +1,4 @@
 
 
 PENDIENTES:
-1. Convertir las pruebas manuales a JUnit tests
-2. Agregar funcionalidad para que se pueda realizar respaldos programados.
-   Esto incluye el envío de correo electrónicos a los interesados.
-3. Agregar funcionalidad para que los respaldos tengan fecha de expiración.
-
-
-PENDIENTE COMPILAR, CREAR EL .BAT y hacer pruebas.
-Ya probé el modo interactivo y el modo runOnce.
-Falta hacer las pruebas para los respaldos programados.
+1. Modificar el proceso de envío de correos para que use msg.html
