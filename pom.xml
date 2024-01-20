@@ -135,4 +135,9 @@
             </plugin>
         </plugins>
     </build>
+    <name>Mr Backup</name>
+    <description>Makes backups from MySQL/MariaDB databasese.
+Also restores backups from:
+- a backup set
+- a folder</description>
 </project>

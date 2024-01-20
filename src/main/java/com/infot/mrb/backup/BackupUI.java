@@ -620,7 +620,6 @@ public class BackupUI extends javax.swing.JFrame {
             saveConfiguration();
 
         } catch (Exception ex) {
-            Logger.getLogger(BackupUI.class.getName()).log(Level.WARNING, null, ex);
             String msg = ex.getMessage() + "\nConfiguration won't be saved.";
             if (!this.standalone) {
                 JOptionPane.showMessageDialog(
@@ -630,6 +629,7 @@ public class BackupUI extends javax.swing.JFrame {
                         JOptionPane.WARNING_MESSAGE);
             } else {
                 sendMailAlert(msg, false);
+                b.writeToLog(msg);
             }
         }
 
@@ -931,15 +931,11 @@ public class BackupUI extends javax.swing.JFrame {
                     break;
                 }
             }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(BackupUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(BackupUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(BackupUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(BackupUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
+        //</editor-fold>
+        
         //</editor-fold>
 
         /* Create and display the form */
@@ -1005,7 +1001,6 @@ public class BackupUI extends javax.swing.JFrame {
             try {
                 Combo.populate(cboServer, true, false);
             } catch (Exception ex) {
-                Logger.getLogger(BackupUI.class.getName()).log(Level.SEVERE, null, ex);
                 String msg = ex.getMessage() + "\nUnable to load servers.";
                 if (!this.standalone) {
                     JOptionPane.showMessageDialog(
@@ -1015,6 +1010,7 @@ public class BackupUI extends javax.swing.JFrame {
                             JOptionPane.WARNING_MESSAGE);
                 } else {
                     sendMailAlert(msg, false);
+                    b.writeToLog(msg);
                 }
             }
         }
@@ -1145,7 +1141,6 @@ public class BackupUI extends javax.swing.JFrame {
         try {
             conn = DBConnection.getBkConnection();
         } catch (ClassNotFoundException | SQLException ex) {
-            Logger.getLogger(BackupUI.class.getName()).log(Level.SEVERE, null, ex);
             String msg = ex.getMessage() + "\nBackup information will not be saved.\nloadData()";
             if (!this.standalone) {
                 JOptionPane.showMessageDialog(
@@ -1155,6 +1150,7 @@ public class BackupUI extends javax.swing.JFrame {
                         JOptionPane.WARNING_MESSAGE);
             } else {
                 sendMailAlert(msg, false);
+                b.writeToLog(msg);
             }
             return;
         }
@@ -1211,15 +1207,16 @@ public class BackupUI extends javax.swing.JFrame {
             }
             conn.close();
         } catch (Exception ex) {
-            Logger.getLogger(BackupUI.class.getName()).log(Level.SEVERE, null, ex);
+            String msg = ex + "\n loadData()";
             if (!this.standalone) {
                 JOptionPane.showMessageDialog(
                         null,
-                        ex + "\n loadData()",
+                        msg,
                         "ERROR",
                         JOptionPane.ERROR_MESSAGE);
             } else {
-                sendMailAlert(ex.getMessage(), false);
+                sendMailAlert(msg, false);
+                b.writeToLog(msg);
             }
         }
     }
@@ -1308,7 +1305,6 @@ public class BackupUI extends javax.swing.JFrame {
             fillComboBox(cboBD, rs, 1, true);
             ps.close();
         } catch (Exception ex) {
-            Logger.getLogger(BackupUI.class.getName()).log(Level.SEVERE, null, ex);
             if (!this.standalone) {
                 JOptionPane.showMessageDialog(null,
                         ex.getMessage(),
@@ -1316,6 +1312,7 @@ public class BackupUI extends javax.swing.JFrame {
                         JOptionPane.ERROR_MESSAGE);
             } else {
                 sendMailAlert(ex.getMessage() + "\nloadData()", false);
+                b.writeToLog(ex.getMessage() + "\nloadData()");
             }
         }
     } // end loadDatabaseNames
@@ -1363,7 +1360,6 @@ public class BackupUI extends javax.swing.JFrame {
                 connectionRecords.add(cr);
             }
         } catch (Exception ex) {
-            b.writeToLog(ex.getMessage());
 
             // If the application is running in interactive mode, show the alert window, else send a mail.
             if (!this.isStandalone()) {
@@ -1373,6 +1369,7 @@ public class BackupUI extends javax.swing.JFrame {
                         JOptionPane.ERROR_MESSAGE);
             } else {
                 sendMailAlert(ex.getMessage() + "\nloadData()", false);
+                b.writeToLog(ex.getMessage() + "\nloadData()");
             }
         }
     }
@@ -1475,7 +1472,6 @@ public class BackupUI extends javax.swing.JFrame {
             }
             
         } catch (Exception ex) {
-            Logger.getLogger(BackupUI.class.getName()).log(Level.SEVERE, null, ex);
             b.writeToLog(ex.getMessage());
         }
     }
@@ -1494,6 +1490,8 @@ public class BackupUI extends javax.swing.JFrame {
         to set the necessary validation data.
          */
 
+        b.setConsoleOnly(false);
+        
         checkWaiting();
 
         // Server
@@ -1527,7 +1525,7 @@ public class BackupUI extends javax.swing.JFrame {
 
             // Now lets validate the database list at the time the job is being executed.
             for (String database : databases) {
-                System.out.println("----- Running backup for " + database + " -----");
+                b.writeToLog("----- Running backup for " + database + " -----");
                 checkWaiting();
                 this.cboBD.setSelectedItem(database);
                 if (this.cboBD.getSelectedIndex() < 0) {
@@ -1540,6 +1538,7 @@ public class BackupUI extends javax.swing.JFrame {
                 this.btnBackupActionPerformed(null);
             }
         } catch (Exception ex) {
+            b.writeToLog(ex.getMessage());
             sendMailAlert(ex.getMessage(), false);
         }
     }
@@ -1558,6 +1557,7 @@ public class BackupUI extends javax.swing.JFrame {
                 Thread.sleep(1000 * 15L);
             } catch (Exception ex) {
                 sendMailAlert(ex.getMessage() + "\nTiemout", false);
+                b.writeToLog(ex.getMessage() + "\nTiemout");
                 dispose();
             }
         }
@@ -1599,8 +1599,6 @@ public class BackupUI extends javax.swing.JFrame {
                 files.add(rs.getString("zip_file_name"));
             }
         } catch (Exception ex) {
-            b.writeToLog(ex.getMessage());
-
             // If the application is running in interactive mode, show the alert window, else send a mail.
             if (!this.isStandalone()) {
                 JOptionPane.showMessageDialog(null,
@@ -1609,6 +1607,7 @@ public class BackupUI extends javax.swing.JFrame {
                         JOptionPane.ERROR_MESSAGE);
             } else {
                 sendMailAlert(ex.getMessage() + "\nloadData()", false);
+                b.writeToLog(ex.getMessage() + "\nloadData()");
             }
         }
 
@@ -1640,7 +1639,6 @@ public class BackupUI extends javax.swing.JFrame {
             // the connection closes before the transaction is not commited.
             String msg
                     = "FAIL when trying to delete expired backups [" + (file != null ? file.getAbsolutePath() : "??") + "]. \n" + ex.getMessage();
-            b.writeToLog(msg);
 
             // If the application is running in interactive mode, show the alert window, else send a mail.
             if (!this.isStandalone()) {
@@ -1650,6 +1648,7 @@ public class BackupUI extends javax.swing.JFrame {
                         JOptionPane.ERROR_MESSAGE);
             } else {
                 sendMailAlert(msg, false);
+                b.writeToLog(msg);
             }
         }
     }

@@ -1,5 +1,6 @@
 package com.infot.mrb.backup;
 
+import com.infot.mrb.utilities.Bitacora;
 import com.infot.mrb.utilities.Props;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -31,6 +32,8 @@ public class Run {
             return;
         }
 
+        Bitacora b = new Bitacora();
+        
         boolean runOnce = false;
         // Expected parameter -runOnce=true/false
         // true=Run only once
@@ -56,7 +59,7 @@ public class Run {
         final long interval = getInterval();
         setStartTime();
 
-        System.out.println("Backup scheduled to run at " + getStartTime());
+        // b.writeToLog("Backup scheduled to run at " + getStartTime());
 
         tasknew = new TimerTask() {
             // this method performs the task
@@ -66,8 +69,11 @@ public class Run {
                 backupUI.setVisible(false);
                 
                 try {
-                    System.out.println("Backup scheduled to run at " + getStartTime());
-                    System.out.println("\nDo no close this window...");
+                    // System.out.println("Backup scheduled to run at " + getStartTime());
+                    // System.out.println("\nDo no close this window...");
+                    b.writeToLog("Backup scheduled to run at " + getStartTime());
+                    b.setConsoleOnly(true);
+                    b.writeToLog("o no close this window...");
                 } catch (IOException ex) {
                     Logger.getLogger(Run.class.getName()).log(Level.SEVERE, null, ex);
                 }

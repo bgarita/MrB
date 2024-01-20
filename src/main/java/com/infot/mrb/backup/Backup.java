@@ -2,6 +2,7 @@ package com.infot.mrb.backup;
 
 import com.infot.mrb.database.DBConnection;
 import com.infot.mrb.database.MySQL;
+import com.infot.mrb.utilities.Bitacora;
 import java.awt.HeadlessException;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -23,6 +24,7 @@ public class Backup extends Thread {
     private char[] password;
     private BackupUI backupUI;
     private String database;
+    private Bitacora b = new Bitacora();
 
     @Override
     public void run() {
@@ -58,7 +60,7 @@ public class Backup extends Thread {
             return;
         }
 
-        System.out.println("Backup in progres..");
+        b.writeToLog("Backup in progres..");
         File folder;
 
         try {
@@ -101,14 +103,17 @@ public class Backup extends Thread {
             // Backup data
             for (String table : databaseTables) {
 
-                System.out.println("Backing-up table " + table + "..");
+                //System.out.println("Backing-up table " + table + "..");
+                b.writeToLog("Backing-up table " + table + "..");
                 engine.setTable(table);
                 engine.exportData(this.backupUI.getProgressBar());
-                System.out.println("Backing-up table " + table + ".. complete!");
+                //System.out.println("Backing-up table " + table + ".. complete!");
+                b.writeToLog("Backing-up table " + table + ".. complete!");
             }
 
             // Backup routines
-            System.out.println("Backing-up functions and procedures..");
+            //System.out.println("Backing-up functions and procedures..");
+            b.writeToLog("Backing-up functions and procedures..");
             // Create dump file for routines
             BufferedWriter bufferedWriter = fileParts.createFileWriter(conn.getCatalog(), "routines.sql", true);
 
@@ -127,10 +132,12 @@ public class Backup extends Thread {
 
             bufferedWriter.close();
 
-            System.out.println("Backing-up functions and procedures.. complete!");
+            //System.out.println("Backing-up functions and procedures.. complete!");
+            b.writeToLog("Backing-up functions and procedures.. complete!");
 
             // Backup views
-            System.out.println("Backing-up views..");
+            //System.out.println("Backing-up views..");
+            b.writeToLog("Backing-up views..");
 
             bufferedWriter = fileParts.createFileWriter(conn.getCatalog(), "views.sql", true);
 
@@ -145,10 +152,12 @@ public class Backup extends Thread {
 
             bufferedWriter.close();
 
-            System.out.println("Backing-up views.. complete!");
+            //System.out.println("Backing-up views.. complete!");
+            b.writeToLog("Backing-up views.. complete!");
 
             // Backup triggers
-            System.out.println("Backing-up triggers..");
+            //System.out.println("Backing-up triggers..");
+            b.writeToLog("Backing-up triggers..");
 
             bufferedWriter = fileParts.createFileWriter(conn.getCatalog(), "triggers.sql", true);
 
@@ -163,7 +172,8 @@ public class Backup extends Thread {
 
             bufferedWriter.close();
 
-            System.out.println("Backing-up triggers.. complete!");
+            //System.out.println("Backing-up triggers.. complete!");
+            b.writeToLog("Backing-up triggers.. complete!");
 
             // The zip process contains the required options to encryp or not
             // but if the user chooses not to compress then we have to verify
@@ -228,7 +238,8 @@ public class Backup extends Thread {
             return;
         }
 
-        System.out.println("Backup complete!");
+        //System.out.println("Backup complete!");
+        b.writeToLog("Backup complete!");
 
         if (!backupUI.isStandalone()) {
             JOptionPane.showMessageDialog(null,
@@ -237,7 +248,10 @@ public class Backup extends Thread {
                     JOptionPane.INFORMATION_MESSAGE);
         } else {
             backupUI.sendMailAlert("Backup complete for " + schema, true);
-            System.out.println("\n\n---- WARNING: Do not close this window ----");
+            b.setConsoleOnly(true);
+            //System.out.println("\n\n---- WARNING: Do not close this window ----");
+            b.writeToLog("\n\n---- WARNING: Do not close this window ----");
+            b.setConsoleOnly(false);
         }
 
         this.backupUI.setBackupInProgress(false);
@@ -256,7 +270,8 @@ public class Backup extends Thread {
                         JOptionPane.WARNING_MESSAGE);
             }
         } catch (HeadlessException | IOException ex) {
-            System.out.println("ERROR: " + ex);
+            //System.out.println("ERROR: " + ex);
+            b.writeToLog("ERROR: " + ex);
         }
 
         this.backupUI.loadData();
@@ -283,7 +298,8 @@ public class Backup extends Thread {
 
         // Encrypt file
         if (!source.isDirectory()) {
-            System.out.println("Encrypting " + source.getAbsolutePath());
+            //System.out.println("Encrypting " + source.getAbsolutePath());
+            b.writeToLog("Encrypting " + source.getAbsolutePath());
             encryption.encryptFile(source);
             if (source.getAbsolutePath().endsWith(".json")) {
                 this.backupUI.getProgressBar().setValue(this.backupUI.getProgressBar().getValue() + 10);
@@ -300,7 +316,8 @@ public class Backup extends Thread {
                 continue;
             }
 
-            System.out.println("Encrypting " + f.getAbsolutePath());
+            //System.out.println("Encrypting " + f.getAbsolutePath());
+            b.writeToLog("Encrypting " + f.getAbsolutePath());
             encryption.encryptFile(f);
             // Update progress bar if file is json
             if (f.getAbsolutePath().endsWith(".json")) {

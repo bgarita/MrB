@@ -21,10 +21,12 @@ import java.util.logging.Logger;
 public class Bitacora {
     private File logFile;
     private String error_message;
+    private boolean consoleOnly;
     
     public Bitacora(){
         this.error_message = "";
         this.logFile = new File("MrB.log");
+        this.consoleOnly = false;
         
         if (!logFile.exists()){
             try {
@@ -56,8 +58,8 @@ public class Bitacora {
     
     
     /**
-     * Guarda la información de los distintos eventos ocurridos en una
-     * bitácora de texto.
+     * Muestra por consola y guarda la información de los distintos eventos 
+     * ocurridos en una bitácora de texto.
      * @author Bosco Garita Azofeifa
      * @param text String mensaje del evento
      */
@@ -68,7 +70,14 @@ public class Bitacora {
         } // end if
         
         Date d = new Date();
-        text = d + "\n" + text;
+        text = d + " " + text + "\n";
+        
+        System.out.println(text);
+        
+        if (this.consoleOnly) {
+            return;
+        }
+        
         FileOutputStream log;
         byte[] contentInBytes;
         contentInBytes = text.getBytes();
@@ -113,4 +122,14 @@ public class Bitacora {
         
         return text.toString();
     } // end readFromLog
+
+    public boolean isConsoleOnly() {
+        return consoleOnly;
+    }
+
+    public void setConsoleOnly(boolean consoleOnly) {
+        this.consoleOnly = consoleOnly;
+    }
+    
+    
 } // end class
