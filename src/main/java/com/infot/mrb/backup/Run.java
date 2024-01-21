@@ -32,7 +32,7 @@ public class Run {
             return;
         }
 
-        Bitacora b = new Bitacora();
+        Bitacora log = new Bitacora();
         
         boolean runOnce = false;
         // Expected parameter -runOnce=true/false
@@ -71,9 +71,10 @@ public class Run {
                 try {
                     // System.out.println("Backup scheduled to run at " + getStartTime());
                     // System.out.println("\nDo no close this window...");
-                    b.writeToLog("Backup scheduled to run at " + getStartTime());
-                    b.setConsoleOnly(true);
-                    b.writeToLog("o no close this window...");
+                    log.info("Backup scheduled to run at " + getStartTime());
+                    log.setConsoleOnly(true);
+                    log.info("o no close this window...");
+                    log.setConsoleOnly(false);
                 } catch (IOException ex) {
                     Logger.getLogger(Run.class.getName()).log(Level.SEVERE, null, ex);
                 }

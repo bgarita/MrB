@@ -44,7 +44,7 @@ public class BackupUI extends javax.swing.JFrame {
     private List<ConnectionRecord> connectionRecords;
 
     private boolean standalone;
-    private final Bitacora b = new Bitacora();
+    private final Bitacora log = new Bitacora();
     private int backupLife; // In days
 
     /**
@@ -629,7 +629,7 @@ public class BackupUI extends javax.swing.JFrame {
                         JOptionPane.WARNING_MESSAGE);
             } else {
                 sendMailAlert(msg, false);
-                b.writeToLog(msg);
+                log.error(msg);
             }
         }
 
@@ -1010,7 +1010,7 @@ public class BackupUI extends javax.swing.JFrame {
                             JOptionPane.WARNING_MESSAGE);
                 } else {
                     sendMailAlert(msg, false);
-                    b.writeToLog(msg);
+                    log.error(msg);
                 }
             }
         }
@@ -1150,7 +1150,7 @@ public class BackupUI extends javax.swing.JFrame {
                         JOptionPane.WARNING_MESSAGE);
             } else {
                 sendMailAlert(msg, false);
-                b.writeToLog(msg);
+                log.error(msg);
             }
             return;
         }
@@ -1216,7 +1216,7 @@ public class BackupUI extends javax.swing.JFrame {
                         JOptionPane.ERROR_MESSAGE);
             } else {
                 sendMailAlert(msg, false);
-                b.writeToLog(msg);
+                log.error(msg);
             }
         }
     }
@@ -1312,7 +1312,7 @@ public class BackupUI extends javax.swing.JFrame {
                         JOptionPane.ERROR_MESSAGE);
             } else {
                 sendMailAlert(ex.getMessage() + "\nloadData()", false);
-                b.writeToLog(ex.getMessage() + "\nloadData()");
+                log.error(ex.getMessage() + "\nloadData()");
             }
         }
     } // end loadDatabaseNames
@@ -1369,7 +1369,7 @@ public class BackupUI extends javax.swing.JFrame {
                         JOptionPane.ERROR_MESSAGE);
             } else {
                 sendMailAlert(ex.getMessage() + "\nloadData()", false);
-                b.writeToLog(ex.getMessage() + "\nloadData()");
+                log.error(ex.getMessage() + "\nloadData()");
             }
         }
     }
@@ -1472,7 +1472,7 @@ public class BackupUI extends javax.swing.JFrame {
             }
             
         } catch (Exception ex) {
-            b.writeToLog(ex.getMessage());
+            log.error(ex.getMessage());
         }
     }
 
@@ -1490,7 +1490,7 @@ public class BackupUI extends javax.swing.JFrame {
         to set the necessary validation data.
          */
 
-        b.setConsoleOnly(false);
+        log.setConsoleOnly(false);
         
         checkWaiting();
 
@@ -1525,7 +1525,7 @@ public class BackupUI extends javax.swing.JFrame {
 
             // Now lets validate the database list at the time the job is being executed.
             for (String database : databases) {
-                b.writeToLog("----- Running backup for " + database + " -----");
+                log.info("----- Running backup for " + database + " -----");
                 checkWaiting();
                 this.cboBD.setSelectedItem(database);
                 if (this.cboBD.getSelectedIndex() < 0) {
@@ -1538,7 +1538,7 @@ public class BackupUI extends javax.swing.JFrame {
                 this.btnBackupActionPerformed(null);
             }
         } catch (Exception ex) {
-            b.writeToLog(ex.getMessage());
+            log.error(ex.getMessage());
             sendMailAlert(ex.getMessage(), false);
         }
     }
@@ -1557,7 +1557,7 @@ public class BackupUI extends javax.swing.JFrame {
                 Thread.sleep(1000 * 15L);
             } catch (Exception ex) {
                 sendMailAlert(ex.getMessage() + "\nTiemout", false);
-                b.writeToLog(ex.getMessage() + "\nTiemout");
+                log.error(ex.getMessage() + "\nTiemout");
                 dispose();
             }
         }
@@ -1607,7 +1607,7 @@ public class BackupUI extends javax.swing.JFrame {
                         JOptionPane.ERROR_MESSAGE);
             } else {
                 sendMailAlert(ex.getMessage() + "\nloadData()", false);
-                b.writeToLog(ex.getMessage() + "\nloadData()");
+                log.error(ex.getMessage() + "\nloadData()");
             }
         }
 
@@ -1648,7 +1648,7 @@ public class BackupUI extends javax.swing.JFrame {
                         JOptionPane.ERROR_MESSAGE);
             } else {
                 sendMailAlert(msg, false);
-                b.writeToLog(msg);
+                log.error(msg);
             }
         }
     }

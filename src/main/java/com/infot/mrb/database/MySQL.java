@@ -3,6 +3,7 @@ package com.infot.mrb.database;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.infot.mrb.backup.FileParts;
+import com.infot.mrb.utilities.Bitacora;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -35,6 +36,9 @@ public class MySQL {
     private List<String> columnTypes;   // Table column types
     private List<String> columnValues;  // Table column values
     private final FileParts fileParts;  // Sets file headear & footer info
+    
+    // WARNING: use consoleOnly=true as the default in this class.
+    private final Bitacora log;
 
     /**
      * Retrieve data from MySQL/MariaDB.
@@ -50,6 +54,8 @@ public class MySQL {
         this.table = table;
         this.conn = conn;
         this.rows = rows;
+        this.log = new Bitacora();
+        log.setConsoleOnly(true);
         this.columnNames = new ArrayList<>();
         this.columnTypes = new ArrayList<>();
         this.columnValues = new ArrayList<>();
@@ -62,6 +68,8 @@ public class MySQL {
         this.table = "";
         this.conn = conn;
         this.rows = rows;
+        this.log = new Bitacora();
+        log.setConsoleOnly(true);
         this.columnNames = new ArrayList<>();
         this.columnTypes = new ArrayList<>();
         this.columnValues = new ArrayList<>();
@@ -147,7 +155,8 @@ public class MySQL {
                 }
                 fileParts.writeContent(bufferedWriter, json);
             }
-            System.out.println("Processing " + currentRecord + " out of " + maxRecords);
+            //System.out.println("Processing " + currentRecord + " out of " + maxRecords);
+            log.info("Processing " + currentRecord + " out of " + maxRecords);
         }
 
         rs.close();
@@ -222,7 +231,9 @@ public class MySQL {
      * @throws IOException
      */
     public void createConfigurationFiles() throws SQLException, IOException {
-        System.out.println("Creating configuration files..");
+        //System.out.println("Creating configuration files..");
+        log.setConsoleOnly(false);
+        log.info("Creating configuration files..");
 
         String fileName = "start-up.sql";
         File file = fileParts.createFile(schema, fileName, true);   // Delete existing file
@@ -257,6 +268,9 @@ public class MySQL {
 
         fileParts.setFileFooter(bufferedWriter);
         bufferedWriter.close();
+        
+        log.info("Creating configuration files.. done!");
+        log.setConsoleOnly(true);
     }
 
     /**
@@ -270,7 +284,9 @@ public class MySQL {
      * @throws IOException
      */
     public void executeDumpFile(String fileName, String folderName, String targetDatabase) throws SQLException, IOException {
-        System.out.println("Reading " + fileName + "..");
+        //System.out.println("Reading " + fileName + "..");
+        log.info("Reading " + fileName + "..");
+        
         fileName = folderName + System.getProperty("file.separator") + fileName;
         
         // Double check file location.
@@ -391,7 +407,9 @@ public class MySQL {
             if (!jsonFile.getName().endsWith(".json")) {
                 continue;
             }
-            System.out.println("Restoring table " + jsonFile.getName().replace(".json", "") + "..");
+            //System.out.println("Restoring table " + jsonFile.getName().replace(".json", "") + "..");
+            log.setConsoleOnly(false);
+            log.info("Restoring table " + jsonFile.getName().replace(".json", "") + "..");
 
             columnNames = new ArrayList<>();
             columnTypes = new ArrayList<>();
@@ -399,7 +417,10 @@ public class MySQL {
 
             loadJsonData(jsonFile);
 
-            System.out.println("Restoring table " + jsonFile.getName().replace(".json", "") + ".. complete!");
+            //System.out.println("Restoring table " + jsonFile.getName().replace(".json", "") + ".. complete!");
+            log.info("Restoring table " + jsonFile.getName().replace(".json", "") + ".. complete!");
+            log.setConsoleOnly(true);
+            
             progresBar.setValue(progresBar.getValue() + (int) valueForEachJson);
             pointsApplied += (int) valueForEachJson;
         }
@@ -413,7 +434,10 @@ public class MySQL {
         
         // If json is empty won't continue.
         if (rootNode.isArray() && rootNode.size() == 0) {
-            System.out.println(jsonFile.getCanonicalPath() + " does not contain any data.");
+            //System.out.println(jsonFile.getCanonicalPath() + " does not contain any data.");
+            log.setConsoleOnly(false);
+            log.warn(jsonFile.getCanonicalPath() + " does not contain any data.");
+            log.setConsoleOnly(true);
             return;
         }
 
@@ -444,17 +468,14 @@ public class MySQL {
         if (jsonNode.isObject()) {
             jsonNode.fields().forEachRemaining(entry -> {
                 switch (entry.getKey()) {
-                    case "columnName": {
+                    case "columnName" ->  {
                         columnNames.add(entry.getValue().toString());
-                        break;
                     }
-                    case "columnType": {
+                    case "columnType" ->  {
                         columnTypes.add(entry.getValue().toString());
-                        break;
                     }
-                    case "columnValue": {
+                    case "columnValue" ->  {
                         columnValues.add(entry.getValue().toString());
-                        break;
                     }
                 }
             });
@@ -524,50 +545,41 @@ public class MySQL {
             }
 
             switch (columnType) {
-                case "BIT":
+                case "BIT" -> {
                     boolean bValue = value.equals("1");
                     ps.setBoolean(parameterPosition, bValue);
-                    break;
-                case "TINYINT":
-                case "SMALLINT":
-                case "MEDIUMINT":
-                case "INT":
-                    ps.setInt(parameterPosition, Integer.parseInt(value));
-                    break;
-                case "BIGINT":
+                }
+                case "TINYINT", "SMALLINT", "MEDIUMINT", "INT" -> ps.setInt(parameterPosition, Integer.parseInt(value));
+                case "BIGINT" -> {
                     if (value.equalsIgnoreCase("NULL")) {
                         ps.setNull(parameterPosition, java.sql.Types.NULL);
                     } else {
                         ps.setLong(parameterPosition, Long.parseLong(value));
                     }
-                    break;
-
-                case "FLOAT":
-                case "DOUBLE":
-                case "DECIMAL":
+                }
+                case "FLOAT", "DOUBLE", "DECIMAL" -> {
                     if (value.equalsIgnoreCase("NULL")) {
                         ps.setNull(parameterPosition, java.sql.Types.NULL);
                     } else {
                         ps.setDouble(parameterPosition, Double.parseDouble(value));
                     }
-                    break;
-
-                case "BLOB":
-                case "LONGBLOB":
+                }
+                case "BLOB", "LONGBLOB" -> {
                     if (value.equalsIgnoreCase("NULL")) {
                         ps.setNull(parameterPosition, java.sql.Types.NULL);
                     } else {
                         byte[] binaryData = Base64.getDecoder().decode(value);
                         ps.setBytes(parameterPosition, binaryData);
                     }
-                    break;
-
-                default: //JSON, DATE, DATETIME, TIMESTAMP, VARCHAR, etc
+                }
+                default -> {
+                    //JSON, DATE, DATETIME, TIMESTAMP, VARCHAR, etc
                     if (value.equalsIgnoreCase("NULL")) {
                         ps.setNull(parameterPosition, java.sql.Types.NULL);
                     } else {
                         ps.setString(parameterPosition, value);
                     }
+                }
             }
             parameterPosition++;
             listsIndex++;
