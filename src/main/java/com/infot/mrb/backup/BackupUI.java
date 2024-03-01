@@ -2,6 +2,7 @@ package com.infot.mrb.backup;
 
 import com.infot.mrb.database.DBConnection;
 import com.infot.mrb.mail.MailSender;
+import com.infot.mrb.utilities.Archivos;
 import com.infot.mrb.utilities.Bitacora;
 import com.infot.mrb.utilities.Props;
 import com.infot.mrb.utilities.Ut;
@@ -1641,6 +1642,10 @@ public class BackupUI extends javax.swing.JFrame {
                 bkCon.setAutoCommit(true);
             }
             log.info(ids.size() + " expired backup files deleted.");
+            
+            // Remove old files which are not tied to the database.
+            this.removeOldFiles("zip", this.backupLife);
+            
         } catch (Exception ex) {
             // No need to execute a rollback since it executes implicitly when 
             // the connection closes before the transaction is not commited.
@@ -1659,4 +1664,30 @@ public class BackupUI extends javax.swing.JFrame {
             }
         }
     }
+    
+    /*
+    This method deletes files based on the creation date without checking database
+    */
+    private void removeOldFiles(String destino, int days) {
+        log.info("Checking file life cycle... Keeping " + days + " days.");
+        Archivos archivos = new Archivos();
+        File folder = new File(destino);
+        String[] children = folder.list();
+        int deleted = 0;
+
+        for (String f : children) {
+            try {
+                File backup = new File(folder + "/" + f);
+                if (archivos.getAge(backup) > days) {
+                    backup.delete();
+                    deleted++;
+                }
+            } catch (IOException ex) {
+                log.error("\n" + BackupUI.class.getName() + "--> " + ex.getMessage());
+            }
+        } // end for
+        
+        log.info(deleted + " deleted files.");
+        
+    } // end removOldFiles
 }

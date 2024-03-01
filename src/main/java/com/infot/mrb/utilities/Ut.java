@@ -6,6 +6,11 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -14,6 +19,13 @@ import java.util.logging.Logger;
  * @author bgarita, 31/12/2023
  */
 public class Ut {
+    public static final int DAY = 1;
+    public static final int MONTH = 2;
+    public static final int YEAR = 3;
+    public static final int WEEK = 4;
+    public static final int HOUR = 5;
+    public static final int MINUTE = 6;
+    public static final int SECOND = 7;
     
     public static String fileToString(Path path) {
         StringBuilder sb = new StringBuilder();
@@ -87,4 +99,54 @@ public class Ut {
         } // end switch
         return name;
     } // end getProperty
+    
+    /**
+     * Calcular la diferencia entre dos fechas (en días, meses o años).
+     *
+     * @param sinceDate Date fecha inicio
+     * @param toDate Date fecha final
+     * @param part int parte de la fecha solicitada (Ut.DAY, Ut.MONTH, ect)
+     * @return int diferencia
+     */
+    public static int dateDiff(Date sinceDate, Date toDate, int part) {
+        long diff;
+
+        Calendar sinceCal = GregorianCalendar.getInstance();
+        Calendar thruCal = GregorianCalendar.getInstance();
+        sinceCal.setTime(sinceDate);
+        thruCal.setTime(toDate);
+
+        int day = sinceCal.get(Calendar.DAY_OF_MONTH);
+        int month = sinceCal.get(Calendar.MONTH);
+        int year = sinceCal.get(Calendar.YEAR);
+
+        // LocalDate si empieza el mes en 1
+        LocalDate startLocalDate = LocalDate.of(year, month + 1, day);
+
+        day = thruCal.get(Calendar.DAY_OF_MONTH);
+        month = thruCal.get(Calendar.MONTH);
+        year = thruCal.get(Calendar.YEAR);
+
+        LocalDate endLocalDate = LocalDate.of(year, month + 1, day);
+
+        switch (part) {
+            case DAY -> {
+                diff = ChronoUnit.DAYS.between(startLocalDate, endLocalDate);
+            }
+            case MONTH -> {
+                diff = ChronoUnit.MONTHS.between(startLocalDate, endLocalDate);
+            }
+            case YEAR -> {
+                diff = ChronoUnit.YEARS.between(startLocalDate, endLocalDate);
+            }
+            case WEEK -> {
+                diff = ChronoUnit.WEEKS.between(startLocalDate, endLocalDate);
+            }
+            default -> {
+                diff = 0;
+            }
+        } // end switch
+
+        return (int) diff;
+    }
 }
