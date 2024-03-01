@@ -709,12 +709,16 @@ public class BackupUI extends javax.swing.JFrame {
         }
 
         if (this.chkOverrideDatabase.isSelected()) {
+            String msg = "Existing database will be overriden\n Sure you wanna do that?";
             int option = JOptionPane.showConfirmDialog(null,
-                    "Existing database will be overriden\n Sure you wanna do that?",
+                    msg,
                     "WARNING", JOptionPane.YES_NO_OPTION);
+            log.warn(msg);
             if (option == JOptionPane.NO_OPTION) {
+                log.warn("User replied 'NO'");
                 return;
             }
+            log.warn("User replied 'YES'");
         }
 
         try {
@@ -726,6 +730,7 @@ public class BackupUI extends javax.swing.JFrame {
                     null, ex.getMessage(),
                     "Error",
                     JOptionPane.WARNING_MESSAGE);
+            log.warn(ex.getMessage() + "\n Configuration not saved.");
             // No problem if not saved... continue with the restoration.
         }
 
@@ -1150,7 +1155,7 @@ public class BackupUI extends javax.swing.JFrame {
                         JOptionPane.WARNING_MESSAGE);
             } else {
                 sendMailAlert(msg, false);
-                log.error(msg);
+                log.warn(msg);
             }
             return;
         }
@@ -1586,6 +1591,7 @@ public class BackupUI extends javax.swing.JFrame {
     }
 
     private void deleteExpiredBackups() {
+        log.info("Validating backup files expiration...");
         List<Integer> ids = new ArrayList<>();
         List<String> files = new ArrayList<>();
         String sql = "SELECT id, zip_file_name from bk.backup WHERE DATEDIFF(NOW(), created_on) > ?";
@@ -1634,6 +1640,7 @@ public class BackupUI extends javax.swing.JFrame {
 
                 bkCon.setAutoCommit(true);
             }
+            log.info(ids.size() + " expired backup files deleted.");
         } catch (Exception ex) {
             // No need to execute a rollback since it executes implicitly when 
             // the connection closes before the transaction is not commited.

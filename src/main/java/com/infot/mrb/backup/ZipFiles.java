@@ -1,5 +1,6 @@
 package com.infot.mrb.backup;
 
+import com.infot.mrb.utilities.Bitacora;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -33,6 +34,7 @@ public class ZipFiles {
     private JProgressBar progressBar;
     private boolean encrypted;
     private final Encryption encryption = new Encryption();
+    private final Bitacora log = new Bitacora();
 
     public ZipFiles() {
         this.removeAfterZip = false;
@@ -98,7 +100,8 @@ public class ZipFiles {
         if (this.removeAfterZip) {
             delete(sourceFile); // removes files and folders
         }
-        System.out.println("\nZipped file: " + targetFileName);
+        //System.out.println("\nZipped file: " + targetFileName);
+        log.info("\nZipped file: " + targetFileName);
         File file = new File(targetFileName);
 
         return file.getCanonicalPath();
@@ -133,7 +136,8 @@ public class ZipFiles {
                     fileToZip = encryption.encryptFile(fileToZip);
                 }
 
-                System.out.println("Compressing " + fileToZip.getAbsolutePath());
+                //System.out.println("Compressing " + fileToZip.getAbsolutePath());
+                log.info("Compressing " + fileToZip.getAbsolutePath());
                 
                 zos.putNextEntry(new ZipEntry(fileToZip.getCanonicalPath()));
                 byte[] bytes = Files.readAllBytes(Paths.get(fileToZip.getAbsolutePath()));
@@ -153,7 +157,8 @@ public class ZipFiles {
                 fileToZip = encryption.encryptFile(sourceFile);
             }
 
-            System.out.println(" Compressing " + sourceFile.getAbsolutePath());
+            //System.out.println("Compressing " + sourceFile.getAbsolutePath());
+            log.info("Compressing " + sourceFile.getAbsolutePath());
             zos.putNextEntry(new ZipEntry(fileToZip.getCanonicalPath()));
             byte[] bytes = Files.readAllBytes(Paths.get(fileToZip.getAbsolutePath()));
             zos.write(bytes, 0, bytes.length);
@@ -210,7 +215,8 @@ public class ZipFiles {
             maxPoints = 1;
         }
 
-        System.out.println("Extracting files..");
+        //System.out.println("Extracting files..");
+        log.info("Extracting files..");
         String sourceFile = zipFile.getName();
         String outputFolder = sourceFile.split("_")[0];
 
@@ -263,7 +269,8 @@ public class ZipFiles {
 
             }
         }
-        System.out.println("Extracting files.. complete!");
+        //System.out.println("Extracting files.. complete!");
+        log.info("Extracting files.. complete!");
 
         // Set max points for this task without calculaing in case the rounding process was not exact
         if (this.progressBar != null) {

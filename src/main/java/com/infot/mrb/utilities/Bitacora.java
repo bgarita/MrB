@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.fusesource.jansi.Ansi;
 
 
 /**
@@ -22,6 +23,15 @@ public class Bitacora {
     private File logFile;
     private String error_message;
     private boolean consoleOnly;
+    
+    public static final String ANSI_RED = "\\u001B[31m";
+    public static final String ANSI_GREEN = "\\u001B[32m";
+    public static final String ANSI_YELLOW = "\\u001B[33m";
+    public static final String ANSI_BLUE = "\\u001B[34m";
+    public static final String ANSI_PURPLE = "\\u001B[35m";
+    public static final String ANSI_CYAN = "\\u001B[36m";
+    public static final String ANSI_WHITE = "\\u001B[37m";
+    public static final String ANSI_RESET = "\\u001B[0m";
     
     public Bitacora(){
         this.error_message = "";
@@ -73,10 +83,20 @@ public class Bitacora {
             return;
         } // end if
         
+        boolean colorInfo = (text.contains("complete") || text.contains("sucess")) && text.contains("[INFO]");
+        
         Date d = new Date();
         text = d + " " + text + "\n";
         
-        System.out.println(text);
+        if (colorInfo) {
+            System.out.println(Ansi.ansi().fg(Ansi.Color.GREEN).a(text).reset());
+        } else if (text.contains("[WARNING]")){
+            System.out.println(Ansi.ansi().fg(Ansi.Color.YELLOW).a(text).reset());
+        } else if (text.contains("[ERROR]") || text.contains("fail")) {
+            System.out.println(Ansi.ansi().fg(Ansi.Color.RED).a(text).reset());
+        } else {
+            System.err.println(text);
+        }
         
         if (this.consoleOnly) {
             return;
@@ -181,18 +201,38 @@ public class Bitacora {
 
     } // end setLogFile
     
+    /**
+     * Displays a messages on the console and writes it to the log.
+     * If the user sets the consoleOnly to true then the write to the 
+     * log file will be disabled.
+     * @param text 
+     */
     public void info(String text) {
         text = "[INFO] " + text;
         this.writeToLog(text);
     }
     
+    /**
+     * Displays warning on the console and writes it to the log file.
+     * @param text String message to be logged
+     */
     public void warn(String text) {
         text = "[WARNING] " + text;
+        boolean logMode = this.consoleOnly;
+        this.consoleOnly = false;
         this.writeToLog(text);
+        this.consoleOnly = logMode;
     }
     
+    /**
+     * Displays error on the console and writes it to the log file.
+     * @param text String message to be logged
+     */
     public void error(String text) {
         text = "[ERROR] " + text;
+        boolean logMode = this.consoleOnly;
+        this.consoleOnly = false;
         this.writeToLog(text);
+        this.consoleOnly = logMode;
     }
 } // end class

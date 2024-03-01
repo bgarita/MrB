@@ -2,6 +2,7 @@ package com.infot.mrb.backup;
 
 import com.infot.mrb.database.DBConnection;
 import com.infot.mrb.database.MySQL;
+import com.infot.mrb.utilities.Bitacora;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
@@ -25,6 +26,7 @@ public class Restore extends Thread {
     private final Encryption encryption = new Encryption();
     private boolean restoreFromFolder;
     private File sourceFolder;
+    private final Bitacora log = new Bitacora();
 
     /**
      * Restore a database in a separate thread.
@@ -104,7 +106,8 @@ public class Restore extends Thread {
         
         backupUI.getProgressBar().setMaximum(totalPoints);
         
-        System.out.println("Restore in progress..");
+        //System.out.println("Restore in progress..");
+        log.info("Restore in progress..");
 
         ZipFiles zip = new ZipFiles(false);
         zip.setProgressBar(backupUI.getProgressBar());
@@ -172,9 +175,13 @@ public class Restore extends Thread {
             
             backupUI.setRestoreInProgress(false);
 
-            System.out.println("Restore successful.");
+            //System.out.println("Restore successful.");
+            log.info("Restore successful.");
 
-            JOptionPane.showMessageDialog(null, "Restore complete", "Message", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(null, 
+                    "Restore complete", 
+                    "Message", 
+                    JOptionPane.INFORMATION_MESSAGE);
             
             // Post restore tasks
             String sql = "UPDATE `bk`.`backup` "
@@ -200,8 +207,12 @@ public class Restore extends Thread {
             delete(directory);
 
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-            Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(
+                    null, 
+                    ex.getMessage(), 
+                    "Error", 
+                    JOptionPane.ERROR_MESSAGE);
+            log.error(ex.getMessage());
         }
     }
 
@@ -225,7 +236,8 @@ public class Restore extends Thread {
         
         backupUI.getProgressBar().setMaximum(totalPoints);
         
-        System.out.println("Restore in progress..");
+        //System.out.println("Restore in progress..");
+        log.info("Restore in progress..");
         
         try {
             
@@ -268,7 +280,8 @@ public class Restore extends Thread {
             
             backupUI.setRestoreInProgress(false);
 
-            System.out.println("Restore successful.");
+            //System.out.println("Restore successful.");
+            log.info("Restore successful.");
 
             JOptionPane.showMessageDialog(
                     null, 
@@ -282,7 +295,7 @@ public class Restore extends Thread {
                     ex.getMessage(), 
                     "Error", 
                     JOptionPane.ERROR_MESSAGE);
-            Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, ex);
+            log.error(ex.getMessage());
         }
     }
 

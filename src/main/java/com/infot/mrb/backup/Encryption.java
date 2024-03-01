@@ -1,5 +1,6 @@
 package com.infot.mrb.backup;
 
+import com.infot.mrb.utilities.Bitacora;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -15,10 +16,12 @@ import org.jasypt.util.text.BasicTextEncryptor;
  */
 public class Encryption {
     private static final String PASSWORD = "dotcom-2023%09*05-{1.!$}"; // Must be 16, 24 or 32 length for AES-128, AES-192 or AES-256, respectively
+    private final Bitacora log = new Bitacora();
     
     public File encryptFile(File inputFile) throws FileNotFoundException, IOException {
 
-        System.out.println("Encrypting " + inputFile.getAbsolutePath());
+        //System.out.println("Encrypting " + inputFile.getAbsolutePath());
+        log.info("Encrypting " + inputFile.getAbsolutePath());
         
         File outputFile = new File(inputFile.getAbsoluteFile() + ".cif");
         BasicTextEncryptor textEncryptor = new BasicTextEncryptor();
@@ -35,7 +38,8 @@ public class Encryption {
         
         // If everything goes well, delete the original file (not directory).
         if (inputFile.isFile()) {
-            System.out.println("Deleting " + inputFile.getAbsolutePath());
+            //System.out.println("Deleting " + inputFile.getAbsolutePath());
+            log.warn("Deleting " + inputFile.getAbsolutePath());
             inputFile.delete();
         }
 
@@ -56,7 +60,8 @@ public class Encryption {
             return;
         }
         
-        System.out.println("Decrypting file " + inputFile.getName());
+        //System.out.println("Decrypting file " + inputFile.getName());
+        log.info("Decrypting file " + inputFile.getName());
 
         // Remove the .cif extension
         File outputFile = new File(inputFile.getAbsolutePath().replace(".cif", ""));

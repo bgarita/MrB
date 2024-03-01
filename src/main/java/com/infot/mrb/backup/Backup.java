@@ -234,6 +234,7 @@ public class Backup extends Thread {
                         "Error", JOptionPane.ERROR_MESSAGE);
             } else {
                 backupUI.sendMailAlert(ex.getMessage() + "\nBackup progress", false);
+                log.error(ex.getMessage() + "\nBackup progress");
             }
             this.backupUI.setBackupInProgress(false);
             return;
