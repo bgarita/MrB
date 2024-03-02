@@ -1,0 +1,4 @@
+[
+[{"columnType":"INTEGER","columnValue":"0","columnName":"idtarjeta"},{"columnType":"VARCHAR","columnValue":"Not a card (do not delete)","columnName":"descrip"},{"columnType":"VARCHAR","columnValue":"C","columnName":"tipo"}],
+[{"columnType":"INTEGER","columnValue":"1","columnName":"idtarjeta"},{"columnType":"VARCHAR","columnValue":"Visa Master Card","columnName":"descrip"},{"columnType":"VARCHAR","columnValue":"C","columnName":"tipo"}]
+]

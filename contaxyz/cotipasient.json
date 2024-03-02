@@ -1,0 +1,20 @@
+[
+[{"columnType":"TINYINT","columnValue":"1","columnName":"tipo_comp"},{"columnType":"VARCHAR","columnValue":"DEPÓSITOS","columnName":"descrip"},{"columnType":"INTEGER","columnValue":"0","columnName":"consecutivo"}],
+[{"columnType":"TINYINT","columnValue":"2","columnName":"tipo_comp"},{"columnType":"VARCHAR","columnValue":"PLANILLAS","columnName":"descrip"},{"columnType":"INTEGER","columnValue":"0","columnName":"consecutivo"}],
+[{"columnType":"TINYINT","columnValue":"3","columnName":"tipo_comp"},{"columnType":"VARCHAR","columnValue":"CHEQUES                       ","columnName":"descrip"},{"columnType":"INTEGER","columnValue":"0","columnName":"consecutivo"}],
+[{"columnType":"TINYINT","columnValue":"4","columnName":"tipo_comp"},{"columnType":"VARCHAR","columnValue":"NOTAS DEBITO                  ","columnName":"descrip"},{"columnType":"INTEGER","columnValue":"0","columnName":"consecutivo"}],
+[{"columnType":"TINYINT","columnValue":"5","columnName":"tipo_comp"},{"columnType":"VARCHAR","columnValue":"NOTAS DE CREDITO      ","columnName":"descrip"},{"columnType":"INTEGER","columnValue":"0","columnName":"consecutivo"}],
+[{"columnType":"TINYINT","columnValue":"6","columnName":"tipo_comp"},{"columnType":"VARCHAR","columnValue":"GASTOS","columnName":"descrip"},{"columnType":"INTEGER","columnValue":"0","columnName":"consecutivo"}],
+[{"columnType":"TINYINT","columnValue":"7","columnName":"tipo_comp"},{"columnType":"VARCHAR","columnValue":"DEPRECIACION                  ","columnName":"descrip"},{"columnType":"INTEGER","columnValue":"0","columnName":"consecutivo"}],
+[{"columnType":"TINYINT","columnValue":"8","columnName":"tipo_comp"},{"columnType":"VARCHAR","columnValue":"TRANSFERENCIAS                ","columnName":"descrip"},{"columnType":"INTEGER","columnValue":"0","columnName":"consecutivo"}],
+[{"columnType":"TINYINT","columnValue":"9","columnName":"tipo_comp"},{"columnType":"VARCHAR","columnValue":"FACTURACION                   ","columnName":"descrip"},{"columnType":"INTEGER","columnValue":"0","columnName":"consecutivo"}],
+[{"columnType":"TINYINT","columnValue":"10","columnName":"tipo_comp"},{"columnType":"VARCHAR","columnValue":"RECIBOS DE DINERO","columnName":"descrip"},{"columnType":"INTEGER","columnValue":"0","columnName":"consecutivo"}],
+[{"columnType":"TINYINT","columnValue":"11","columnName":"tipo_comp"},{"columnType":"VARCHAR","columnValue":"INVENTARIOS                   ","columnName":"descrip"},{"columnType":"INTEGER","columnValue":"0","columnName":"consecutivo"}],
+[{"columnType":"TINYINT","columnValue":"18","columnName":"tipo_comp"},{"columnType":"VARCHAR","columnValue":"Temporal","columnName":"descrip"},{"columnType":"INTEGER","columnValue":"0","columnName":"consecutivo"}],
+[{"columnType":"TINYINT","columnValue":"19","columnName":"tipo_comp"},{"columnType":"VARCHAR","columnValue":"Compras","columnName":"descrip"},{"columnType":"INTEGER","columnValue":"5","columnName":"consecutivo"}],
+[{"columnType":"TINYINT","columnValue":"20","columnName":"tipo_comp"},{"columnType":"VARCHAR","columnValue":"Varios","columnName":"descrip"},{"columnType":"INTEGER","columnValue":"0","columnName":"consecutivo"}],
+[{"columnType":"TINYINT","columnValue":"21","columnName":"tipo_comp"},{"columnType":"VARCHAR","columnValue":"TRANSFERENCIAS                ","columnName":"descrip"},{"columnType":"INTEGER","columnValue":"2","columnName":"consecutivo"}],
+[{"columnType":"TINYINT","columnValue":"22","columnName":"tipo_comp"},{"columnType":"VARCHAR","columnValue":"SEGUROS                       ","columnName":"descrip"},{"columnType":"INTEGER","columnValue":"2","columnName":"consecutivo"}],
+[{"columnType":"TINYINT","columnValue":"98","columnName":"tipo_comp"},{"columnType":"VARCHAR","columnValue":"ASIENTO PARA LEVANTAR SALDOS","columnName":"descrip"},{"columnType":"INTEGER","columnValue":"0","columnName":"consecutivo"}],
+[{"columnType":"TINYINT","columnValue":"99","columnName":"tipo_comp"},{"columnType":"VARCHAR","columnValue":"ASIENTOS DE CIERRE ANUAL","columnName":"descrip"},{"columnType":"INTEGER","columnValue":"0","columnName":"consecutivo"}]
+]

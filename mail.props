@@ -1,9 +1,0 @@
-#Parámetros para el envío de correos
-#Sun May 02 15:00:30 CST 2021
-mail.smtp.starttls.enable=true
-mail.smtp.port=587
-mail.smtp.user=osais311266@gmail.com
-mail.smtp.ssl.trust=smtp.gmail.com
-mail.smtp.auth=true
-mail.smtp.host=smtp.gmail.com
-mail.smtp.clave=rjzyqnamphqnomif

@@ -1,0 +1,17 @@
+[
+[{"columnType":"INTEGER","columnValue":"1","columnName":"parametro"},{"columnType":"VARCHAR","columnValue":"Ingresos","columnName":"descrip"}],
+[{"columnType":"INTEGER","columnValue":"2","columnName":"parametro"},{"columnType":"VARCHAR","columnValue":"Inventario inicial","columnName":"descrip"}],
+[{"columnType":"INTEGER","columnValue":"3","columnName":"parametro"},{"columnType":"VARCHAR","columnValue":"Compras","columnName":"descrip"}],
+[{"columnType":"INTEGER","columnValue":"4","columnName":"parametro"},{"columnType":"VARCHAR","columnValue":"Devoluciones sobre compras","columnName":"descrip"}],
+[{"columnType":"INTEGER","columnValue":"5","columnName":"parametro"},{"columnType":"VARCHAR","columnValue":"Descuentos sobre compras","columnName":"descrip"}],
+[{"columnType":"INTEGER","columnValue":"6","columnName":"parametro"},{"columnType":"VARCHAR","columnValue":"Inventario final*","columnName":"descrip"}],
+[{"columnType":"INTEGER","columnValue":"7","columnName":"parametro"},{"columnType":"VARCHAR","columnValue":"Gastos de mercadeo y ventas","columnName":"descrip"}],
+[{"columnType":"INTEGER","columnValue":"8","columnName":"parametro"},{"columnType":"VARCHAR","columnValue":"Gastos de administración y finanzas","columnName":"descrip"}],
+[{"columnType":"INTEGER","columnValue":"9","columnName":"parametro"},{"columnType":"VARCHAR","columnValue":"Gastos Depreciación Amortización y Deterioro","columnName":"descrip"}],
+[{"columnType":"INTEGER","columnValue":"10","columnName":"parametro"},{"columnType":"VARCHAR","columnValue":"Gastos de operación","columnName":"descrip"}],
+[{"columnType":"INTEGER","columnValue":"11","columnName":"parametro"},{"columnType":"VARCHAR","columnValue":"Ingresos Financieros","columnName":"descrip"}],
+[{"columnType":"INTEGER","columnValue":"12","columnName":"parametro"},{"columnType":"VARCHAR","columnValue":"Gastos Financieros","columnName":"descrip"}],
+[{"columnType":"INTEGER","columnValue":"13","columnName":"parametro"},{"columnType":"VARCHAR","columnValue":"Participación en resultado de asociados","columnName":"descrip"}],
+[{"columnType":"INTEGER","columnValue":"14","columnName":"parametro"},{"columnType":"VARCHAR","columnValue":"Otros Ingresos","columnName":"descrip"}],
+[{"columnType":"INTEGER","columnValue":"15","columnName":"parametro"},{"columnType":"VARCHAR","columnValue":"Otros Gastos","columnName":"descrip"}]
+]
