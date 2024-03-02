@@ -1,5 +1,6 @@
 package com.infot.mrb.mail;
 
+import com.infot.mrb.utilities.Props;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -60,10 +61,11 @@ public class MailSender {
     public boolean sendHTMLMail(String mailAddress, String asunto, String textoHTML) throws Exception {
         if (this.malformado(mailAddress)) {
             this.errorMessage
-                    = "Esta dirección de correo tiene \n"
-                    + "caracteres o repetición de caracteres \n"
-                    + "que se pueden interpretar como spam \n"
-                    + "o está mal formada '" + mailAddress + "'";
+                    = """
+                      Esta dirección de correo tiene 
+                      caracteres o repetición de caracteres 
+                      que se pueden interpretar como spam 
+                      o está mal formada '""" + mailAddress + "'";
             this.error = true;
             return false;
         }
@@ -106,10 +108,11 @@ public class MailSender {
     public boolean sendAttachmentMail(String destinatario, String asunto, String bodyText, String[] archivos) {
         if (this.malformado(destinatario)) {
             this.errorMessage
-                    = "Esta dirección de correo tiene \n"
-                    + "caracteres o repetición de caracteres \n"
-                    + "que se pueden interpretar como spam \n"
-                    + "o está mal formada '" + destinatario + "'";
+                    = """
+                      Esta dirección de correo tiene 
+                      caracteres o repetición de caracteres 
+                      que se pueden interpretar como spam 
+                      o está mal formada '""" + destinatario + "'";
             this.error = true;
             return false;
         }
@@ -193,27 +196,27 @@ public class MailSender {
     }
 
     private Properties getMailConfig() throws FileNotFoundException, IOException {
-        Properties props = new Properties();
-        String configFile = "mail.props"; // Debe estar en la carpeta de instalacion del sistema
-        File mailConfig = new File(configFile);
 
-        // Establecer los parámetros predeterminados
-        props.put("mail.smtp.host", "smtp.gmail.com");
-        props.put("mail.smtp.ssl.trust", "smtp.gmail.com");
-        props.put("mail.smtp.user", "userxxx@gmail.com");
-        props.put("mail.smtp.clave", "Changeme");
-        props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.starttls.enable", "true");
-        props.put("mail.smtp.port", "587");
+        // Properties file must be in the system installation folder.
+        Properties props = Props.getProps(new File("mail.properties"));
 
-        if (mailConfig.exists()) {
-            System.out.println("Using " + mailConfig.getAbsolutePath());
-            try ( FileInputStream fis = new FileInputStream(mailConfig)) {
-                props.load(fis);
-                //System.out.println("\nUser: " + props.getProperty("mail.smtp.user"));
-                //System.out.println("Pass: " + props.getProperty("mail.smtp.clave"));
-            }
-        } // end if
+        if (props == null | props.isEmpty()) {
+
+            // Set default parameters
+            props = new Properties();
+            props.put("mail.smtp.host", "smtp.gmail.com");
+            props.put("mail.smtp.ssl.trust", "smtp.gmail.com");
+            props.put("mail.smtp.user", "userxxx@gmail.com");
+            props.put("mail.smtp.clave", "Changeme");
+            props.put("mail.smtp.auth", "true");
+            props.put("mail.smtp.starttls.enable", "true");
+            props.put("mail.smtp.port", "587");
+            
+        }
+
+        //System.out.println("\nUser: " + props.getProperty("mail.smtp.user"));
+        //System.out.println("Pass: " + props.getProperty("mail.smtp.clave"));
+        
         return props;
     } // end getMailConfig
 

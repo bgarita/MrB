@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Properties;
 
 /**
@@ -14,9 +13,15 @@ import java.util.Properties;
 public class Props {
     
     public static Properties getProps(File file) throws FileNotFoundException, IOException {
-        InputStream inputStream = new FileInputStream(file);
         Properties props = new Properties();
-        props.load(inputStream);
+        if (file.exists()) {
+            Bitacora log = new Bitacora();
+            log.info("Using " + file.getAbsolutePath());
+            try (FileInputStream fis = new FileInputStream(file)) {
+                props.load(fis);
+            }
+        } // end if
+        
         return props;
     }
 }

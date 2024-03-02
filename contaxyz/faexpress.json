@@ -1,0 +1,4 @@
+[
+[{"columnType":"SMALLINT UNSIGNED","columnValue":"1","columnName":"CodExpress"},{"columnType":"DECIMAL","columnValue":"2000.00","columnName":"tarifa"},{"columnType":"DECIMAL","columnValue":"25000.00","columnName":"minimo"},{"columnType":"FLOAT","columnValue":"2.0","columnName":"porcentaje"}],
+[{"columnType":"SMALLINT UNSIGNED","columnValue":"2","columnName":"CodExpress"},{"columnType":"DECIMAL","columnValue":"2000.00","columnName":"tarifa"},{"columnType":"DECIMAL","columnValue":"35000.00","columnName":"minimo"},{"columnType":"FLOAT","columnValue":"1.5","columnName":"porcentaje"}]
+]

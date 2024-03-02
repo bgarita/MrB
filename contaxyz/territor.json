@@ -1,0 +1,11 @@
+[
+[{"columnType":"TINYINT UNSIGNED","columnValue":"0","columnName":"terr"},{"columnType":"VARCHAR","columnValue":"ZONAS ELIMINADAS","columnName":"descrip"}],
+[{"columnType":"TINYINT UNSIGNED","columnValue":"2","columnName":"terr"},{"columnType":"VARCHAR","columnValue":"SAN JOSE - 002","columnName":"descrip"}],
+[{"columnType":"TINYINT UNSIGNED","columnValue":"3","columnName":"terr"},{"columnType":"VARCHAR","columnValue":"HEREDIA - 003","columnName":"descrip"}],
+[{"columnType":"TINYINT UNSIGNED","columnValue":"4","columnName":"terr"},{"columnType":"VARCHAR","columnValue":"PUNTARENAS/GUAPILES - 004","columnName":"descrip"}],
+[{"columnType":"TINYINT UNSIGNED","columnValue":"5","columnName":"terr"},{"columnType":"VARCHAR","columnValue":"INDEFINIDA","columnName":"descrip"}],
+[{"columnType":"TINYINT UNSIGNED","columnValue":"6","columnName":"terr"},{"columnType":"VARCHAR","columnValue":"CSU, SUPERMERCADOS - 006","columnName":"descrip"}],
+[{"columnType":"TINYINT UNSIGNED","columnValue":"14","columnName":"terr"},{"columnType":"VARCHAR","columnValue":"HEREDIA CADENA DETALLISTA","columnName":"descrip"}],
+[{"columnType":"TINYINT UNSIGNED","columnValue":"17","columnName":"terr"},{"columnType":"VARCHAR","columnValue":"DESPACHO","columnName":"descrip"}],
+[{"columnType":"TINYINT UNSIGNED","columnValue":"22","columnName":"terr"},{"columnType":"VARCHAR","columnValue":"ENTREGAS ESPECIALES","columnName":"descrip"}]
+]

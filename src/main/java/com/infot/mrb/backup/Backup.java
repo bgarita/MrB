@@ -16,7 +16,7 @@ import javax.swing.JOptionPane;
 /**
  * Executes the backup process in a separate thread.
  *
- * @author AA07SZZ, 2023-09-20
+ * @author bgarita, 2023-09-20
  */
 public class Backup extends Thread {
 
@@ -65,7 +65,7 @@ public class Backup extends Thread {
         File folder;
 
         try {
-            MySQL engine = new MySQL(conn, schema, 12); // Connection, schema & records per page
+            MySQL engine = new MySQL(conn, database, 12); // Connection, schema & records per page
 
             // Create a directory with the name of the database
             folder = new File(database);
@@ -73,11 +73,11 @@ public class Backup extends Thread {
                 folder.mkdir();
             }
 
-            List<String> databaseTables = engine.getDatabaseTables("TABLE");
-            List<String> databaseViews = engine.getDatabaseTables("VIEW");
-            List<String> storedFunctions = engine.getRoutines("FUNCTION");
-            List<String> storedProcedures = engine.getRoutines("PROCEDURE");
-            List<String> triggers = engine.getTriggers();
+            List<String> databaseTables = engine.getDatabaseTablesV2("TABLE");
+            List<String> databaseViews = engine.getDatabaseTablesV2("VIEW");
+            List<String> storedFunctions = engine.getRoutinesV2("FUNCTION");
+            List<String> storedProcedures = engine.getRoutinesV2("PROCEDURE");
+            List<String> triggers = engine.getTriggersV2();
 
             /*
             Points for progress bar
@@ -89,7 +89,7 @@ public class Backup extends Thread {
             Stored procedure                1
             Trigger processed               1
              */
-            int records = engine.getRecordCount(databaseTables);
+            int records = engine.getRecordCountV2(databaseTables);
             int count = records
                     + databaseViews.size()
                     + storedFunctions.size()
@@ -173,7 +173,6 @@ public class Backup extends Thread {
 
             bufferedWriter.close();
 
-            //System.out.println("Backing-up triggers.. complete!");
             log.info("Backing-up triggers.. complete!");
 
             // The zip process contains the required options to encryp or not
@@ -300,7 +299,6 @@ public class Backup extends Thread {
 
         // Encrypt file
         if (!source.isDirectory()) {
-            //System.out.println("Encrypting " + source.getAbsolutePath());
             log.info("Encrypting " + source.getAbsolutePath());
             encryption.encryptFile(source);
             if (source.getAbsolutePath().endsWith(".json")) {
@@ -318,7 +316,6 @@ public class Backup extends Thread {
                 continue;
             }
 
-            //System.out.println("Encrypting " + f.getAbsolutePath());
             log.info("Encrypting " + f.getAbsolutePath());
             encryption.encryptFile(f);
             // Update progress bar if file is json

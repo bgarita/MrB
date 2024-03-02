@@ -36,7 +36,7 @@ public class MySQL {
     private List<String> columnTypes;   // Table column types
     private List<String> columnValues;  // Table column values
     private final FileParts fileParts;  // Sets file headear & footer info
-    
+
     // WARNING: use consoleOnly=true as the default in this class.
     private final Bitacora log;
 
@@ -102,7 +102,8 @@ public class MySQL {
         BufferedWriter bufferedWriter = fileParts.createFileWriter(this.schema, table + "_init.sql", true);
 
         // Set sql sentences for creating the database
-        Statement statement = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+        Statement statement = conn.createStatement(
+                ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
         ResultSet rs = statement.executeQuery("SHOW CREATE TABLE " + table);
         rs.next();
         String createTable = rs.getString(2) + ";";
@@ -268,7 +269,7 @@ public class MySQL {
 
         fileParts.setFileFooter(bufferedWriter);
         bufferedWriter.close();
-        
+
         log.info("Creating configuration files.. done!");
         log.setConsoleOnly(true);
     }
@@ -286,14 +287,14 @@ public class MySQL {
     public void executeDumpFile(String fileName, String folderName, String targetDatabase) throws SQLException, IOException {
         //System.out.println("Reading " + fileName + "..");
         log.info("Reading " + fileName + "..");
-        
+
         fileName = folderName + System.getProperty("file.separator") + fileName;
-        
+
         // Double check file location.
         if (!(new File(fileName).exists())) {
             throw new IOException("Files to restore must be in the systems's intallation directory.");
         }
-        
+
         boolean hasDelimiter = false;   // Used for routines
 
         try (BufferedReader reader = new BufferedReader(new FileReader(fileName, StandardCharsets.UTF_8))) {
@@ -420,7 +421,7 @@ public class MySQL {
             //System.out.println("Restoring table " + jsonFile.getName().replace(".json", "") + ".. complete!");
             log.info("Restoring table " + jsonFile.getName().replace(".json", "") + ".. complete!");
             log.setConsoleOnly(true);
-            
+
             progresBar.setValue(progresBar.getValue() + (int) valueForEachJson);
             pointsApplied += (int) valueForEachJson;
         }
@@ -431,7 +432,7 @@ public class MySQL {
     private void loadJsonData(File jsonFile) throws SQLException, IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode rootNode = objectMapper.readTree(jsonFile);
-        
+
         // If json is empty won't continue.
         if (rootNode.isArray() && rootNode.size() == 0) {
             //System.out.println(jsonFile.getCanonicalPath() + " does not contain any data.");
@@ -468,13 +469,13 @@ public class MySQL {
         if (jsonNode.isObject()) {
             jsonNode.fields().forEachRemaining(entry -> {
                 switch (entry.getKey()) {
-                    case "columnName" ->  {
+                    case "columnName" -> {
                         columnNames.add(entry.getValue().toString());
                     }
-                    case "columnType" ->  {
+                    case "columnType" -> {
                         columnTypes.add(entry.getValue().toString());
                     }
-                    case "columnValue" ->  {
+                    case "columnValue" -> {
                         columnValues.add(entry.getValue().toString());
                     }
                 }
@@ -549,7 +550,8 @@ public class MySQL {
                     boolean bValue = value.equals("1");
                     ps.setBoolean(parameterPosition, bValue);
                 }
-                case "TINYINT", "SMALLINT", "MEDIUMINT", "INT" -> ps.setInt(parameterPosition, Integer.parseInt(value));
+                case "TINYINT", "SMALLINT", "MEDIUMINT", "INT" ->
+                    ps.setInt(parameterPosition, Integer.parseInt(value));
                 case "BIGINT" -> {
                     if (value.equalsIgnoreCase("NULL")) {
                         ps.setNull(parameterPosition, java.sql.Types.NULL);
@@ -601,6 +603,37 @@ public class MySQL {
         return databaseTables;
     }
 
+    // This method supports backward compatibility for databases migrated from MySQL into MariaDB 11.0
+    public List<String> getDatabaseTablesV2(String type) throws SQLException {
+        Statement statement = conn.createStatement(
+                ResultSet.TYPE_SCROLL_INSENSITIVE,
+                ResultSet.CONCUR_READ_ONLY);
+        List<String> databaseTables = new ArrayList<>();
+
+        String sqlSent = "SHOW TABLE STATUS FROM " + this.schema;
+        try (ResultSet rs = statement.executeQuery(sqlSent)) {
+            while (rs.next()) {
+                // Add table names
+                if (type.equals("TABLE")) {
+                    // Check for engine column
+                    if (rs.getString("Engine") != null) {
+                        databaseTables.add(rs.getString(1));
+                    }
+                    continue;
+                }
+
+                // Add view names
+                if (type.equals("VIEW")) {
+                    // Check for engine column
+                    if (rs.getString("Engine") == null) {
+                        databaseTables.add(rs.getString(1));
+                    }
+                }
+            }
+        }
+        return databaseTables;
+    }
+
     public List<String> getRoutines(String type) throws SQLException {
         Statement statement = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
         List<String> routines = new ArrayList<>();
@@ -611,6 +644,23 @@ public class MySQL {
         try (ResultSet rs = statement.executeQuery(sqlSent)) {
             while (rs.next()) {
                 routines.add(rs.getString("ROUTINE_NAME"));
+            }
+        }
+        return routines;
+    }
+
+    // This method supports backward compatibility for databases migrated from MySQL into MariaDB 11.0
+    public List<String> getRoutinesV2(String type) throws SQLException {
+        Statement statement = conn.createStatement(
+                ResultSet.TYPE_SCROLL_INSENSITIVE,
+                ResultSet.CONCUR_READ_ONLY);
+        List<String> routines = new ArrayList<>();
+        String sqlSent
+                = (type.equals("FUNCTION") ? "SHOW FUNCTION STATUS WHERE Db= " : "SHOW PROCEDURE STATUS WHERE Db= ") + "'" + this.schema + "'";
+
+        try (ResultSet rs = statement.executeQuery(sqlSent)) {
+            while (rs.next()) {
+                routines.add(rs.getString("Name"));
             }
         }
         return routines;
@@ -669,6 +719,21 @@ public class MySQL {
         }
         return triggers;
     }
+    
+    // This method supports backward compatibility for databases migrated from MySQL into MariaDB 11.0
+    public List<String> getTriggersV2() throws SQLException {
+        Statement statement = conn.createStatement(
+                ResultSet.TYPE_SCROLL_INSENSITIVE, 
+                ResultSet.CONCUR_READ_ONLY);
+        List<String> triggers = new ArrayList<>();
+        String sqlSent = "SHOW TRIGGERS FROM " + this.schema;
+        try (ResultSet rs = statement.executeQuery(sqlSent)) {
+            while (rs.next()) {
+                triggers.add(rs.getString("Trigger"));
+            }
+        }
+        return triggers;
+    }
 
     public void exportTrigger(String trigger, BufferedWriter bufferedWriter) throws IOException, SQLException {
         String content = "DROP TRIGGER" + " IF EXISTS " + trigger + ";";
@@ -706,6 +771,24 @@ public class MySQL {
         try (Statement statement = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
             for (String t : tables) {
                 String sqlSent = "SELECT COUNT(*) FROM " + t;
+
+                try (ResultSet rs = statement.executeQuery(sqlSent)) {
+                    while (rs.next()) {
+                        records += rs.getInt(1);
+                    }
+                }
+            }
+        }
+        return records;
+    }
+    
+    // This method supports backward compatibility for databases migrated from MySQL into MariaDB 11.0
+    public int getRecordCountV2(List<String> tables) throws SQLException {
+
+        int records = 0;
+        try (Statement statement = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
+            for (String t : tables) {
+                String sqlSent = "SELECT COUNT(*) FROM " + this.schema + "." + t;
 
                 try (ResultSet rs = statement.executeQuery(sqlSent)) {
                     while (rs.next()) {

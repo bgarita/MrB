@@ -32,6 +32,6 @@ credito_dev
 information_schema
 
 # properties files
-config.properties
+*.properties
 /build/
 /dist/

@@ -1,0 +1,6 @@
+[
+[{"columnType":"VARCHAR","columnValue":"001","columnName":"codigo"},{"columnType":"VARCHAR","columnValue":"Colones","columnName":"descrip"},{"columnType":"CHAR","columnValue":"¢","columnName":"simbolo"},{"columnType":"VARCHAR","columnValue":"CRC","columnName":"codigoHacienda"}],
+[{"columnType":"VARCHAR","columnValue":"002","columnName":"codigo"},{"columnType":"VARCHAR","columnValue":"Dólares","columnName":"descrip"},{"columnType":"CHAR","columnValue":"$","columnName":"simbolo"},{"columnType":"VARCHAR","columnValue":"USD","columnName":"codigoHacienda"}],
+[{"columnType":"VARCHAR","columnValue":"003","columnName":"codigo"},{"columnType":"VARCHAR","columnValue":"Euros","columnName":"descrip"},{"columnType":"CHAR","columnValue":"?","columnName":"simbolo"},{"columnType":"VARCHAR","columnValue":"","columnName":"codigoHacienda"}],
+[{"columnType":"VARCHAR","columnValue":"004","columnName":"codigo"},{"columnType":"VARCHAR","columnValue":"Libras Esterlinas","columnName":"descrip"},{"columnType":"CHAR","columnValue":"£","columnName":"simbolo"},{"columnType":"VARCHAR","columnValue":"","columnName":"codigoHacienda"}]
+]

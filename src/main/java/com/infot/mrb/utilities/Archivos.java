@@ -18,6 +18,7 @@ import java.nio.file.attribute.FileTime;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
@@ -29,17 +30,30 @@ import net.lingala.zip4j.model.enums.AesKeyStrength;
 import net.lingala.zip4j.model.enums.EncryptionMethod;
 
 /**
- * @author: Crysfel Villa Created: Friday, June 03, 2005 4:54:59 PM 
- * Modified: Friday, June 03, 2005 4:54:59 PM Bosco Garita
- * Modified: Sunday, Sept 08, 2013 6:52:00 PM Bosco Garita
- * Modified: Saturday, Sept 09, 2023 6:37:00 AM Bosco Garita
+ * @author: Crysfel Villa Created: Friday, June 03, 2005 4:54:59 PM Modified:
+ * Friday, June 03, 2005 4:54:59 PM Bosco Garita Modified: Sunday, Sept 08, 2013
+ * 6:52:00 PM Bosco Garita Modified: Saturday, Sept 09, 2023 6:37:00 AM Bosco
+ * Garita
  */
 public class Archivos {
 
     private boolean error;
     private String mensaje_error;
-    private static final String PASSWORD = "G-A*ga*311266$";
+    private static String PASSWORD; // This key must be 16, 24 or 32 length for AES-128, AES-192 or AES-256, respectively
     private final Bitacora log = new Bitacora();
+
+    public Archivos() {
+        try {
+            Properties props = Props.getProps(new File("encrypt.properties"));
+            if (props == null | props.isEmpty()) {
+                PASSWORD = "G-A*ga*311266$"; // Default key
+            } else {
+                PASSWORD = props.getProperty("encrypt.key");
+            }
+        } catch (IOException ex) {
+            log.error(ex.getMessage());
+        }
+    }
 
     public boolean isError() {
         return error;
@@ -101,8 +115,7 @@ public class Archivos {
 
         try {
             try (
-                    BufferedInputStream fileIn = new BufferedInputStream(new FileInputStream(in)); 
-                    BufferedOutputStream fileOut = new BufferedOutputStream(new FileOutputStream(out))) {
+                    BufferedInputStream fileIn = new BufferedInputStream(new FileInputStream(in)); BufferedOutputStream fileOut = new BufferedOutputStream(new FileOutputStream(out))) {
                 byte[] buf = new byte[2048];
                 int i;
                 while ((i = fileIn.read(buf)) != -1) {
@@ -188,7 +201,7 @@ public class Archivos {
             Logger.getLogger(Archivos.class.getName()).log(Level.SEVERE, null, ex);
             this.error = true;
             this.mensaje_error = ex.getMessage();
-           log.error(this.getClass().getName() + "--> " + ex.getMessage());
+            log.error(this.getClass().getName() + "--> " + ex.getMessage());
         }
 
         return same;
@@ -249,8 +262,8 @@ public class Archivos {
      * @param sourceFile File puede ser un archivo o una carpeta.
      * @param targetFile File debe ser el nombre de un archivo que es donde se
      * guardarán los archivos comprimidos. No debe incluir la extensión ya que
-     * ésta le será agregada por default (.zip). 
-     * Si el targetFile viene nulo el sistema asumirá el mismo nombre que el origen.
+     * ésta le será agregada por default (.zip). Si el targetFile viene nulo el
+     * sistema asumirá el mismo nombre que el origen.
      * @throws FileNotFoundException
      * @throws IOException
      */
@@ -298,16 +311,15 @@ public class Archivos {
             zos.write(bytes, 0, bytes.length);
         } // end if
     } // end addZipFile
-    
-    
+
     // Librería: https://github.com/srikanth-lingala/zip4j
     public void zipCryptFile(File sourceFile, File targetFile) throws ZipException {
         if (!sourceFile.exists()) {
             throw new ZipException(sourceFile.getAbsolutePath() + " does not exist.");
         }
-        
+
         System.out.println("Zipping " + sourceFile.getAbsolutePath() + " ..");
-        
+
         ZipParameters zipParameters = new ZipParameters();
         zipParameters.setEncryptFiles(true);
         zipParameters.setEncryptionMethod(EncryptionMethod.AES);
@@ -315,27 +327,27 @@ public class Archivos {
         // AES 256 is used by default. 
         // You can override it to use AES 128. AES 192 is supported only for extracting.
         zipParameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
-        
+
         ZipFile zipFile = new ZipFile(targetFile, PASSWORD.toCharArray());
-        
+
         if (sourceFile.isDirectory()) {
             zipFile.addFolder(sourceFile, zipParameters);
         } else if (sourceFile.isFile()) {
             zipFile.addFile(sourceFile, zipParameters);
         }
-        
+
         System.out.println("Zipping " + sourceFile.getAbsolutePath() + " .. complete.");
     }
-    
+
     public long getAge(File file) throws IOException {
-        
+
         Calendar cal = GregorianCalendar.getInstance();
         FileTime date = Files.getLastModifiedTime(file.toPath(), LinkOption.NOFOLLOW_LINKS);
         cal.setTimeInMillis(date.toMillis());
         Date sinceDate = cal.getTime();
         cal.setTimeInMillis(System.currentTimeMillis());
         Date toDate = cal.getTime();
-        
+
         return Ut.dateDiff(sinceDate, toDate, Ut.DAY);
     }
 } // end class

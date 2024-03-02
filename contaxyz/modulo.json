@@ -1,0 +1,7 @@
+[
+[{"columnType":"VARCHAR","columnValue":"CON","columnName":"modulo"},{"columnType":"VARCHAR","columnValue":"Contabilidad General","columnName":"Descrip"}],
+[{"columnType":"VARCHAR","columnValue":"CXC","columnName":"modulo"},{"columnType":"VARCHAR","columnValue":"Cuentas por cobrar","columnName":"Descrip"}],
+[{"columnType":"VARCHAR","columnValue":"CXP","columnName":"modulo"},{"columnType":"VARCHAR","columnValue":"Cuentas por pagar","columnName":"Descrip"}],
+[{"columnType":"VARCHAR","columnValue":"FAC","columnName":"modulo"},{"columnType":"VARCHAR","columnValue":"Facturación","columnName":"Descrip"}],
+[{"columnType":"VARCHAR","columnValue":"INV","columnName":"modulo"},{"columnType":"VARCHAR","columnValue":"Inventarios","columnName":"Descrip"}]
+]

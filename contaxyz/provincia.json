@@ -1,0 +1,9 @@
+[
+[{"columnType":"INTEGER","columnValue":"1","columnName":"id"},{"columnType":"INTEGER","columnValue":"1","columnName":"codigo"},{"columnType":"VARCHAR","columnValue":"San José","columnName":"provincia"}],
+[{"columnType":"INTEGER","columnValue":"2","columnName":"id"},{"columnType":"INTEGER","columnValue":"2","columnName":"codigo"},{"columnType":"VARCHAR","columnValue":"Alajuela","columnName":"provincia"}],
+[{"columnType":"INTEGER","columnValue":"3","columnName":"id"},{"columnType":"INTEGER","columnValue":"3","columnName":"codigo"},{"columnType":"VARCHAR","columnValue":"Cartago","columnName":"provincia"}],
+[{"columnType":"INTEGER","columnValue":"4","columnName":"id"},{"columnType":"INTEGER","columnValue":"4","columnName":"codigo"},{"columnType":"VARCHAR","columnValue":"Heredia","columnName":"provincia"}],
+[{"columnType":"INTEGER","columnValue":"5","columnName":"id"},{"columnType":"INTEGER","columnValue":"5","columnName":"codigo"},{"columnType":"VARCHAR","columnValue":"Guanacaste","columnName":"provincia"}],
+[{"columnType":"INTEGER","columnValue":"6","columnName":"id"},{"columnType":"INTEGER","columnValue":"6","columnName":"codigo"},{"columnType":"VARCHAR","columnValue":"Puntarenas","columnName":"provincia"}],
+[{"columnType":"INTEGER","columnValue":"7","columnName":"id"},{"columnType":"INTEGER","columnValue":"7","columnName":"codigo"},{"columnType":"VARCHAR","columnValue":"Limón","columnName":"provincia"}]
+]
