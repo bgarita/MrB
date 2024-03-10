@@ -24,7 +24,7 @@ import org.json.JSONObject;
 
 /**
  *
- * @author AA07SZZ, 08-11-2023
+ * @author bgarita, 08-11-2023
  */
 public class MySQL {
 
@@ -44,7 +44,7 @@ public class MySQL {
      * Retrieve data from MySQL/MariaDB.
      *
      * @param schema String default database
-     * @param table String MySQL table
+     * @param table String database table
      * @param conn Connection to the database
      * @param rows int number of rows per page
      * @throws java.sql.SQLException
@@ -156,7 +156,6 @@ public class MySQL {
                 }
                 fileParts.writeContent(bufferedWriter, json);
             }
-            //System.out.println("Processing " + currentRecord + " out of " + maxRecords);
             log.info("Processing " + currentRecord + " out of " + maxRecords);
         }
 
@@ -232,7 +231,6 @@ public class MySQL {
      * @throws IOException
      */
     public void createConfigurationFiles() throws SQLException, IOException {
-        //System.out.println("Creating configuration files..");
         log.setConsoleOnly(false);
         log.info("Creating configuration files..");
 
@@ -285,7 +283,6 @@ public class MySQL {
      * @throws IOException
      */
     public void executeDumpFile(String fileName, String folderName, String targetDatabase) throws SQLException, IOException {
-        //System.out.println("Reading " + fileName + "..");
         log.info("Reading " + fileName + "..");
 
         fileName = folderName + System.getProperty("file.separator") + fileName;
@@ -408,7 +405,6 @@ public class MySQL {
             if (!jsonFile.getName().endsWith(".json")) {
                 continue;
             }
-            //System.out.println("Restoring table " + jsonFile.getName().replace(".json", "") + "..");
             log.setConsoleOnly(false);
             log.info("Restoring table " + jsonFile.getName().replace(".json", "") + "..");
 
@@ -418,7 +414,6 @@ public class MySQL {
 
             loadJsonData(jsonFile);
 
-            //System.out.println("Restoring table " + jsonFile.getName().replace(".json", "") + ".. complete!");
             log.info("Restoring table " + jsonFile.getName().replace(".json", "") + ".. complete!");
             log.setConsoleOnly(true);
 
@@ -435,7 +430,6 @@ public class MySQL {
 
         // If json is empty won't continue.
         if (rootNode.isArray() && rootNode.size() == 0) {
-            //System.out.println(jsonFile.getCanonicalPath() + " does not contain any data.");
             log.setConsoleOnly(false);
             log.warn(jsonFile.getCanonicalPath() + " does not contain any data.");
             log.setConsoleOnly(true);

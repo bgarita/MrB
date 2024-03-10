@@ -104,16 +104,13 @@ public class Backup extends Thread {
             // Backup data
             for (String table : databaseTables) {
 
-                //System.out.println("Backing-up table " + table + "..");
                 log.info("Backing-up table " + table + "..");
                 engine.setTable(table);
                 engine.exportData(this.backupUI.getProgressBar());
-                //System.out.println("Backing-up table " + table + ".. complete!");
                 log.info("Backing-up table " + table + ".. complete!");
             }
 
             // Backup routines
-            //System.out.println("Backing-up functions and procedures..");
             log.info("Backing-up functions and procedures..");
             // Create dump file for routines
             BufferedWriter bufferedWriter = fileParts.createFileWriter(conn.getCatalog(), "routines.sql", true);
@@ -133,11 +130,9 @@ public class Backup extends Thread {
 
             bufferedWriter.close();
 
-            //System.out.println("Backing-up functions and procedures.. complete!");
             log.info("Backing-up functions and procedures.. complete!");
 
             // Backup views
-            //System.out.println("Backing-up views..");
             log.info("Backing-up views..");
 
             bufferedWriter = fileParts.createFileWriter(conn.getCatalog(), "views.sql", true);
@@ -153,11 +148,9 @@ public class Backup extends Thread {
 
             bufferedWriter.close();
 
-            //System.out.println("Backing-up views.. complete!");
             log.info("Backing-up views.. complete!");
 
             // Backup triggers
-            //System.out.println("Backing-up triggers..");
             log.info("Backing-up triggers..");
 
             bufferedWriter = fileParts.createFileWriter(conn.getCatalog(), "triggers.sql", true);
@@ -239,7 +232,6 @@ public class Backup extends Thread {
             return;
         }
 
-        //System.out.println("Backup complete!");
         log.info("Backup complete!");
 
         if (!backupUI.isStandalone()) {
@@ -250,7 +242,6 @@ public class Backup extends Thread {
         } else {
             backupUI.sendMailAlert("Backup complete for " + schema, true);
             log.setConsoleOnly(true);
-            //System.out.println("\n\n---- WARNING: Do not close this window ----");
             log.info("\n\n---- WARNING: Do not close this window ----");
             log.setConsoleOnly(false);
         }
@@ -271,7 +262,6 @@ public class Backup extends Thread {
                         JOptionPane.WARNING_MESSAGE);
             }
         } catch (HeadlessException | IOException ex) {
-            //System.out.println("ERROR: " + ex);
             log.error(ex.getMessage());
         }
 

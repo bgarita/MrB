@@ -100,7 +100,6 @@ public class ZipFiles {
         if (this.removeAfterZip) {
             delete(sourceFile); // removes files and folders
         }
-        //System.out.println("\nZipped file: " + targetFileName);
         log.info("\nZipped file: " + targetFileName);
         File file = new File(targetFileName);
 
@@ -132,11 +131,9 @@ public class ZipFiles {
                 
                 if (this.encrypted) {
                     // Encrypt file before compressing and then delete it.
-                    //System.out.println("Encrypting " + fileToZip.getAbsolutePath());
                     fileToZip = encryption.encryptFile(fileToZip);
                 }
 
-                //System.out.println("Compressing " + fileToZip.getAbsolutePath());
                 log.info("Compressing " + fileToZip.getAbsolutePath());
                 
                 zos.putNextEntry(new ZipEntry(fileToZip.getCanonicalPath()));
@@ -153,11 +150,9 @@ public class ZipFiles {
         } else {
             File fileToZip = new File(sourceFile.getAbsolutePath());
             if (this.encrypted) {
-                //System.out.println(" Encrypting " + sourceFile.getAbsolutePath());
                 fileToZip = encryption.encryptFile(sourceFile);
             }
 
-            //System.out.println("Compressing " + sourceFile.getAbsolutePath());
             log.info("Compressing " + sourceFile.getAbsolutePath());
             zos.putNextEntry(new ZipEntry(fileToZip.getCanonicalPath()));
             byte[] bytes = Files.readAllBytes(Paths.get(fileToZip.getAbsolutePath()));
@@ -215,7 +210,6 @@ public class ZipFiles {
             maxPoints = 1;
         }
 
-        //System.out.println("Extracting files..");
         log.info("Extracting files..");
         String sourceFile = zipFile.getName();
         String outputFolder = sourceFile.split("_")[0];
@@ -269,7 +263,6 @@ public class ZipFiles {
 
             }
         }
-        //System.out.println("Extracting files.. complete!");
         log.info("Extracting files.. complete!");
 
         // Set max points for this task without calculaing in case the rounding process was not exact
@@ -295,9 +288,6 @@ public class ZipFiles {
         this.progressBar = progressBar;
     }
 
-//    public static String getPASSWORD() {
-//        return PASSWORD;
-//    }
 
     public String AESEncrypt(String text) throws Exception {
         SecretKey password = new SecretKeySpec(Encryption.getPASSWORD().getBytes(), "AES");

@@ -69,11 +69,9 @@ public class Run {
                 backupUI.setVisible(false);
                 
                 try {
-                    // System.out.println("Backup scheduled to run at " + getStartTime());
-                    // System.out.println("\nDo no close this window...");
                     log.info("Backup scheduled to run at " + getStartTime());
                     log.setConsoleOnly(true);
-                    log.info("o no close this window...");
+                    log.info("Do not close this window...");
                     log.setConsoleOnly(false);
                 } catch (IOException ex) {
                     Logger.getLogger(Run.class.getName()).log(Level.SEVERE, null, ex);

@@ -19,8 +19,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import net.lingala.zip4j.ZipFile;
@@ -129,87 +127,8 @@ public class Archivos {
         } // end try-catch
     }  // end copyFilex
 
-    /*
-     Este método todavía no se está usando.  La idea es ir mejorándolo
-     de manera que se pueda utilizar para versionar archivos. 14/11/2015
-     */
-    public boolean compareFiles(File file1, File file2) {
-        boolean same = true;
-        BufferedInputStream fileC1, fileC2;
-        try {
-            fileC1 = new BufferedInputStream(new FileInputStream(file1));
-            fileC2 = new BufferedInputStream(new FileInputStream(file2));
-            byte[] buf1 = new byte[1];
-            byte[] buf2 = new byte[1];
-            StringBuilder sb1, sb2;
-            sb1 = new StringBuilder();
-            sb2 = new StringBuilder();
-            String str1 = "", str2 = "";
-            int i, linea = 1, lineaDif = 0;
-            char a, b;
-            String ls = System.getProperty("line.separator");
-            // Read byte by byte and compare
-            while ((i = fileC1.read(buf1)) != -1) {
-
-                fileC2.read(buf2);
-                a = (char) buf1[0];
-                b = (char) buf2[0];
-
-                // Si el caracter actual es igual al salto de línea...
-                if (ls.charAt(0) == a) {
-                    String str = "\t" + sb1.toString();
-                    System.out.printf("%03d", linea);
-                    System.out.printf("%-35s", str);
-
-                    System.out.println();
-                    linea++;
-                    sb1 = new StringBuilder();
-                }
-
-                if (ls.charAt(0) == a) {
-                    sb2 = new StringBuilder();
-                }
-
-                if (ls.charAt(0) != a) {
-                    sb1.append(a);
-                }
-
-                if (ls.charAt(0) != b) {
-                    sb2.append(b);
-                }
-
-                if (a != b && lineaDif == 0) {
-                    lineaDif = linea - 1;
-                    str1 = sb1.toString();
-                    str2 = sb2.toString();
-                    same = false;
-                }
-            } // end while
-
-            if (same) {
-                System.out.println("They are equal");
-            } else {
-                System.out.println("\nLa diferencia se encuentra en la línea: " + lineaDif);
-                System.out.println("Observe:");
-                System.out.println(str1);
-                System.out.println(str2);
-            }
-
-            fileC1.close();
-            fileC2.close();
-        } catch (Exception ex) {
-            Logger.getLogger(Archivos.class.getName()).log(Level.SEVERE, null, ex);
-            this.error = true;
-            this.mensaje_error = ex.getMessage();
-            log.error(this.getClass().getName() + "--> " + ex.getMessage());
-        }
-
-        return same;
-    } // end compareFile
-
     /**
-     * Cuenta la cantidad de archivos y carpetas contenidas en una ruta
-     * específica.
+     * Cuenta la cantidad de archivos y carpetas contenidas en una ruta específica.
      *
      * @author Bosco Garita
      * @param folder
@@ -239,10 +158,8 @@ public class Archivos {
      * Guardar texto en un archivo ASCII
      *
      * @param text String - texto a almacenar
-     * @param path String - nombre del archivo a guardar (incluye la ruta
-     * completa)
-     * @param append boolean - true=Agrega el texto, false=Reemplaza el texto
-     * existente
+     * @param path String - nombre del archivo a guardar (incluye la ruta completa)
+     * @param append boolean - true=Agrega el texto, false=Reemplaza el texto existente
      * @throws IOException
      * @author Bosco Garita Azofeifa, 13/07/2019
      */

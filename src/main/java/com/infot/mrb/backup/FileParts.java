@@ -14,12 +14,12 @@ import java.time.format.DateTimeFormatter;
 
 /**
  *
- * @author AA07SZZ, 09-12-2023
+ * @author bgarita, 09-12-2023
  */
 public class FileParts {
 
     /**
-     * Sets the SQL commets at the top of the file.
+     * Sets the SQL comments at the top of the file.
      *
      * @param bufferedWriter BufferedWriter that writes any kind of file.
      * @param conn Connection database connection already established
@@ -59,7 +59,7 @@ public class FileParts {
     }
 
     /**
-     * Sets the SQL commets at the bottom of the file.
+     * Sets the SQL comments at the bottom of the file.
      *
      * @param bufferedWriter BufferedWriter that writes any kind of file.
      * @throws IOException
