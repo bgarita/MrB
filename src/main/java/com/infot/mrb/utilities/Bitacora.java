@@ -52,11 +52,6 @@ public class Bitacora {
     } // end constructor
 
     
-    // Este método se deja sin efecto ya que el nombre del log no se debe cambiar
-//    public void setLog(File logFile) {
-//        this.logFile = logFile;
-//    }
-
     public void setError_message(String error_message) {
         this.error_message = error_message;
     }
@@ -68,7 +63,10 @@ public class Bitacora {
     public String getRuta() {
         return Ut.getProperty(SystemConstants.USER_DIR);
     } // end getRuta
-    
+
+    public File getLogFile() {
+        return logFile;
+    }
     
     
     /**
@@ -103,12 +101,12 @@ public class Bitacora {
         }
         
         FileOutputStream log;
-        byte[] contentInBytes;
-        contentInBytes = text.getBytes();
+        byte[] bytes;
+        bytes = text.getBytes();
         
         try {
             log = new FileOutputStream(this.logFile,true);
-            log.write(contentInBytes);
+            log.write(bytes);
             log.flush();
             log.close();
         } catch (Exception ex) {

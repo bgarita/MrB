@@ -2,7 +2,7 @@ package com.infot.mrb.backup;
 
 /**
  *
- * @author AA07SZZ, 2023-09-22
+ * @author bgarita, 2023-09-22
  */
 public class User {
     private String serverName;

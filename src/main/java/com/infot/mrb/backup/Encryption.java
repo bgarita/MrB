@@ -20,11 +20,13 @@ public class Encryption {
 
     private static String PASSWORD; // Must be 16, 24 or 32 length for AES-128, AES-192 or AES-256, respectively
     private final Bitacora log = new Bitacora();
+    private boolean removeEncryptedFile;
 
     public Encryption() {
+        this.removeEncryptedFile = true;    // Default behaviour.
         try {
             Properties props = Props.getProps(new File("encrypt.properties"));
-            if (props == null | props.isEmpty()) {
+            if (props == null || props.isEmpty()) {
                 PASSWORD = "G-A*ga*311266$"; // Default key
             } else {
                 PASSWORD = props.getProperty("encrypt.key");
@@ -53,7 +55,6 @@ public class Encryption {
 
         // If everything goes well, delete the original file (not directory).
         if (inputFile.isFile()) {
-            //System.out.println("Deleting " + inputFile.getAbsolutePath());
             log.warn("Deleting " + inputFile.getAbsolutePath());
             inputFile.delete();
         }
@@ -75,7 +76,6 @@ public class Encryption {
             return;
         }
 
-        //System.out.println("Decrypting file " + inputFile.getName());
         log.info("Decrypting file " + inputFile.getName());
 
         // Remove the .cif extension
@@ -94,7 +94,9 @@ public class Encryption {
         }
 
         // Delete the encrypted file
-        inputFile.delete();
+        if (this.removeEncryptedFile) {
+            inputFile.delete();
+        }
     }
 
     public String decryptText(String encryptedText) throws Exception {
@@ -107,4 +109,14 @@ public class Encryption {
     public static String getPASSWORD() {
         return PASSWORD;
     }
+
+    public boolean isRemoveEncryptedFile() {
+        return removeEncryptedFile;
+    }
+
+    public void setRemoveEncryptedFile(boolean removeEncryptedFile) {
+        this.removeEncryptedFile = removeEncryptedFile;
+    }
+    
+    
 }

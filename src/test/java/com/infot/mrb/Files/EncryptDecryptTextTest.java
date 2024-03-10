@@ -2,6 +2,8 @@ package com.infot.mrb.Files;
 
 import com.infot.mrb.backup.Encryption;
 import com.infot.mrb.backup.ZipFiles;
+import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  *
@@ -9,11 +11,8 @@ import com.infot.mrb.backup.ZipFiles;
  */
 public class EncryptDecryptTextTest {
 
-    /**
-     * @param args the command line arguments
-     * @throws java.lang.Exception
-     */
-    public static void main(String[] args) throws Exception {
+    @Test
+    public void testEncryption() throws Exception {
         String text = "Local Host";
         System.out.println("Original text: " + text);
         ZipFiles zipFiles = new ZipFiles();
@@ -22,6 +21,7 @@ public class EncryptDecryptTextTest {
         
         String decryptedText = zipFiles.AESDecrypt(encryptedText);
         System.out.println("Decrypted text: " + decryptedText);
+        assertTrue(decryptedText.equals(text));
         System.out.println();
         
         Encryption encryption = new Encryption();
@@ -30,6 +30,7 @@ public class EncryptDecryptTextTest {
         System.out.println("Encrypted text2: " + encryptedText);
         decryptedText = encryption.decryptText(encryptedText);
         System.out.println("Decrypted text2: " + decryptedText);
+        assertTrue(decryptedText.equals(text));
         
         System.out.println();
         System.out.println(encryption.decryptText("ClyAkJdGCPc6TAtOn/YjrwCo7XhS3rec"));

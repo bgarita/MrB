@@ -3,22 +3,21 @@ package com.infot.mrb.Files;
 import com.infot.mrb.backup.ZipFiles;
 import java.io.File;
 import java.io.IOException;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
 
 /**
  *
  * @author AA07SZZ
  */
-public class TestZipFiles {
+public class ZipFilesTest {
 
-    /**
-     * @param args the command line arguments
-     * @throws java.io.IOException
-     */
-    public static void main(String[] args) throws IOException, Exception {
-        ZipFiles zip = new ZipFiles(true); // remove files after zipping
-        String folder = "tmp";
-        zip.zipFile(new File(folder));
-        
+    @Test
+    public void zipFile() throws IOException, Exception {
+        File file = new File("cabys_init.sql.cif");
+        ZipFiles zip = new ZipFiles(false); // remove files after zipping
+        String folder = zip.zipFile(file);
+        assertTrue(!folder.isBlank());
         /* Uncoment this code to test decryption
         File cryptedFile = new File(folder + "\\routines.sql.cif");
         

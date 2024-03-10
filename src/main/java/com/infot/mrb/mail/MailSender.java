@@ -1,8 +1,8 @@
 package com.infot.mrb.mail;
 
+import com.infot.mrb.utilities.Bitacora;
 import com.infot.mrb.utilities.Props;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -27,6 +27,7 @@ public class MailSender {
     private boolean error;
 
     private final Properties gmailProps;
+    private final Bitacora log = new Bitacora();
 
     public boolean isError() {
         return error;
@@ -96,7 +97,7 @@ public class MailSender {
 
             Transport.send(message);
         } catch (MessagingException ex) {
-            System.out.println(ex);
+            log.error(ex.getMessage());
             error = true;
             errorMessage = ex.getMessage();
             return false;
@@ -159,7 +160,7 @@ public class MailSender {
 
             Transport.send(message);
         } catch (MessagingException ex) {
-            System.out.println(ex);
+            log.error(ex.getMessage());
             error = true;
             errorMessage = ex.getMessage();
             return false;

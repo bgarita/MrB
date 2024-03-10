@@ -2,6 +2,7 @@ package com.infot.mrb.database;
 
 import com.infot.mrb.backup.ConnectionRecord;
 import com.infot.mrb.backup.Encryption;
+import com.infot.mrb.utilities.Bitacora;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -13,6 +14,8 @@ import java.sql.SQLException;
  * @author Bosco Garita, Enero 2023
  */
 public class DBConnection {
+    
+    private final static Bitacora log = new Bitacora();
 
     /*
     Every encrypted text could be different each time then we cannot test against an encrypted text, 
@@ -68,19 +71,20 @@ public class DBConnection {
         }
 
         String jdbcUrl = "jdbc:mariadb://" + connectionRecord.getIp() + ":" + connectionRecord.getPort() + "/" + connectionRecord.getDefaultSchema();
-        System.out.println("Trying connection...");
+        log.info("Trying connection...");
+        
         Connection connection;
 
         // Set (remote) connection to extract data
         connection = DriverManager.getConnection(jdbcUrl, user, connectionRecord.getPassword());
 
         if (connection != null) {
-            System.out.println("Connection successfull.");
+            log.info("Connection successfull.");
         }
 
         String msg = "Connected to (" + connectionRecord.getServerName() + ") " + connectionRecord.getIp();
 
-        System.out.println(msg);
+        log.info(msg);
 
         return connection;
     }
@@ -91,14 +95,14 @@ public class DBConnection {
 
         String jdbcUrl = "jdbc:mariadb://127.0.0.1:" + port + "/" + database;
 
-        System.out.println("Trying connection...");
+        log.info("Trying connection...");
         Connection connection;
 
         // Set connection
         connection = DriverManager.getConnection(jdbcUrl, user, password);
 
         if (connection != null) {
-            System.out.println("Connection successfull.");
+            log.info("Connection successfull.");
         }
 
         return connection;
