@@ -1,6 +1,5 @@
 package com.infot.mrb.backup;
 
-import com.infot.mrb.utilities.Bitacora;
 import com.infot.mrb.utilities.Props;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -10,6 +9,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Properties;
+import log.Bitacora;
 import org.jasypt.util.text.BasicTextEncryptor;
 
 /**

@@ -1,7 +1,7 @@
 package com.infot.mrb.Files;
 
-import com.infot.mrb.utilities.Bitacora;
 import java.io.IOException;
+import log.Bitacora;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 

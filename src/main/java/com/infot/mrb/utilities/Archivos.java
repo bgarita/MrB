@@ -21,6 +21,7 @@ import java.util.GregorianCalendar;
 import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import log.Bitacora;
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.model.ZipParameters;
@@ -43,7 +44,7 @@ public class Archivos {
     public Archivos() {
         try {
             Properties props = Props.getProps(new File("encrypt.properties"));
-            if (props == null | props.isEmpty()) {
+            if (props == null || props.isEmpty()) {
                 PASSWORD = "G-A*ga*311266$"; // Default key
             } else {
                 PASSWORD = props.getProperty("encrypt.key");

@@ -2,7 +2,6 @@ package com.infot.mrb.backup;
 
 import com.infot.mrb.database.DBConnection;
 import com.infot.mrb.database.MySQL;
-import com.infot.mrb.utilities.Bitacora;
 import java.awt.HeadlessException;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -12,6 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
 import javax.swing.JOptionPane;
+import log.Bitacora;
 
 /**
  * Executes the backup process in a separate thread.

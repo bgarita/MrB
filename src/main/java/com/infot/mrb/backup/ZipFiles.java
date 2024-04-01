@@ -1,6 +1,5 @@
 package com.infot.mrb.backup;
 
-import com.infot.mrb.utilities.Bitacora;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -20,6 +19,7 @@ import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import java.util.Base64;
 import javax.crypto.spec.SecretKeySpec;
+import log.Bitacora;
 
 /**
  * This class creates zip encrypted files. Thouse files can be extracted but not understood.

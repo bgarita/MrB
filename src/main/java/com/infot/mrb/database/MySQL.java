@@ -3,7 +3,6 @@ package com.infot.mrb.database;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.infot.mrb.backup.FileParts;
-import com.infot.mrb.utilities.Bitacora;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -19,6 +18,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import log.Bitacora;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
