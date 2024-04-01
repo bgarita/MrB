@@ -2,12 +2,12 @@ package com.infot.mrb.database;
 
 import com.infot.mrb.backup.ConnectionRecord;
 import com.infot.mrb.backup.Encryption;
-import com.infot.mrb.utilities.Bitacora;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import log.Bitacora;
 
 /**
  *

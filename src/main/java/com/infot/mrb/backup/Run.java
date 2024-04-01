@@ -1,6 +1,5 @@
 package com.infot.mrb.backup;
 
-import com.infot.mrb.utilities.Bitacora;
 import com.infot.mrb.utilities.Props;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -11,6 +10,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import log.Bitacora;
 
 /**
  *

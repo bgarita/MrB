@@ -1,0 +1,7 @@
+1.  mvn install:install-file -Dfile=F:/distlibs/LogB.jar -DgroupId=com.bga -DartifactId=logb -Dversion=1.0.0 -Dpackaging=jar
+2.  Add the depencency:
+<dependency>
+    <groupId>com.bga</groupId>
+    <artifactId>LogB</artifactId>
+    <version>1.0.0</version>
+</dependency>

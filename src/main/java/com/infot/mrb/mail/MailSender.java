@@ -1,6 +1,5 @@
 package com.infot.mrb.mail;
 
-import com.infot.mrb.utilities.Bitacora;
 import com.infot.mrb.utilities.Props;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -12,6 +11,7 @@ import javax.activation.DataHandler;
 import javax.activation.FileDataSource;
 import javax.mail.*;
 import javax.mail.internet.*;
+import log.Bitacora;
 
 /**
  * Esta clase tiene los métodos necesarios para enviar correos de TEXTO, HTML y

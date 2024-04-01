@@ -3,7 +3,6 @@ package com.infot.mrb.backup;
 import com.infot.mrb.database.DBConnection;
 import com.infot.mrb.mail.MailSender;
 import com.infot.mrb.utilities.Archivos;
-import com.infot.mrb.utilities.Bitacora;
 import com.infot.mrb.utilities.Props;
 import com.infot.mrb.utilities.Ut;
 import java.awt.event.WindowAdapter;
@@ -30,6 +29,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JProgressBar;
 import javax.swing.table.DefaultTableModel;
+import log.Bitacora;
 
 /**
  * Backup and restore MySQL databases using pure Java. This application was
@@ -327,7 +327,7 @@ public class BackupUI extends javax.swing.JFrame {
         });
 
         btnRestore.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
-        btnRestore.setText("Run");
+        btnRestore.setText("Restore");
         btnRestore.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnRestoreActionPerformed(evt);
