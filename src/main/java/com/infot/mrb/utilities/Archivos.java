@@ -259,7 +259,7 @@ public class Archivos {
 
     public long getAge(File file) throws IOException {
 
-        Calendar cal = GregorianCalendar.getInstance();
+        Calendar cal = Calendar.getInstance();
         FileTime date = Files.getLastModifiedTime(file.toPath(), LinkOption.NOFOLLOW_LINKS);
         cal.setTimeInMillis(date.toMillis());
         Date sinceDate = cal.getTime();
