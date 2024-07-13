@@ -8,6 +8,7 @@ import com.infot.mrb.utilities.Ut;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -1571,6 +1572,16 @@ public class BackupUI extends javax.swing.JFrame {
 
     public final void setBackupLife() {
         try {
+            // If backupslife.properties file does not exists, create it.
+            Properties props = new Properties();
+            File lifeFile = new File("backupslife.properties");
+            if (!lifeFile.exists()) {
+                props.clear();
+                props.setProperty("keep", (60 * 5) + ""); // 60*5=5 years
+                props.setProperty("period", "days");
+                props.store(new FileOutputStream(lifeFile), "Set backup life time");
+                props.clear();
+            }
             Properties life = Props.getProps(new File("backupslife.properties"));
             String keep = life.getProperty("keep");
             String period = life.getProperty("period");
