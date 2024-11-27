@@ -541,7 +541,7 @@ public class MySQL {
 
             switch (columnType) {
                 case "BIT" -> {
-                    boolean bValue = value.equals("1");
+                    boolean bValue = (value.equals("1") || value.equals("b'1'"));
                     ps.setBoolean(parameterPosition, bValue);
                 }
                 case "TINYINT", "SMALLINT", "MEDIUMINT", "INT" ->

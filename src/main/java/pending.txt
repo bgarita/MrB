@@ -1,5 +1,9 @@
 
 
 PENDIENTES:
+0. Revisar el proceso de restauración de campos tipo bit porque aunque el json de usuarios está correcto
+    a la hora que restauré la tabla usuario el campo enable quedo en 0 cuando debió quedar en 1 (26/11/2024)
+    Modifiqué el proceso de esta manera: boolean bValue = (value.equals("1") || value.equals("b'1'"));
+    Ahorá hay que hacer pruebas. (26/11/2024)
 1. Modificar el proceso de envío de correos para que use msg.html
 2. Probar la bitcora de colores usando shell
