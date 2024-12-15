@@ -96,6 +96,9 @@ public class BackupUI extends javax.swing.JFrame {
         // Set default backup description with selected server + database + today's date.
         setDefaultDescription();
 
+        // Set number of records per block
+        setRecordsPerBlock();
+
         // If MrB is working in standalone mode then start doing the work
         if (standalone) {
             doAll();
@@ -129,6 +132,8 @@ public class BackupUI extends javax.swing.JFrame {
         chkEncrypt = new javax.swing.JCheckBox();
         cboBD = new javax.swing.JComboBox<>();
         jLabel10 = new javax.swing.JLabel();
+        jLabel11 = new javax.swing.JLabel();
+        txtRecordsPerBlock = new javax.swing.JFormattedTextField();
         jPanel2 = new javax.swing.JPanel();
         jLabel3 = new javax.swing.JLabel();
         txtNewDB = new javax.swing.JTextField();
@@ -260,6 +265,10 @@ public class BackupUI extends javax.swing.JFrame {
 
         jLabel10.setText("Database");
 
+        jLabel11.setText("Please enter the number of records to process per block (e.g., 100-1000)");
+
+        txtRecordsPerBlock.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#0"))));
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -281,7 +290,11 @@ public class BackupUI extends javax.swing.JFrame {
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(chkCompress)
-                            .addComponent(chkEncrypt))
+                            .addComponent(chkEncrypt)
+                            .addGroup(jPanel3Layout.createSequentialGroup()
+                                .addComponent(jLabel11)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(txtRecordsPerBlock, javax.swing.GroupLayout.PREFERRED_SIZE, 88, javax.swing.GroupLayout.PREFERRED_SIZE)))
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
@@ -296,11 +309,15 @@ public class BackupUI extends javax.swing.JFrame {
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel4)
                     .addComponent(txtBackupDescription, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGap(18, 18, 18)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel11)
+                    .addComponent(txtRecordsPerBlock, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(13, 13, 13)
                 .addComponent(chkCompress)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(chkEncrypt)
-                .addGap(100, 100, 100)
+                .addGap(62, 62, 62)
                 .addComponent(btnBackup)
                 .addContainerGap())
         );
@@ -548,7 +565,7 @@ public class BackupUI extends javax.swing.JFrame {
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addGap(18, 18, 18)
                         .addComponent(btnRestoreFrom)))
-                .addContainerGap(13, Short.MAX_VALUE))
+                .addContainerGap(16, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Restore", jPanel2);
@@ -579,7 +596,7 @@ public class BackupUI extends javax.swing.JFrame {
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(8, 8, 8)
                 .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 13, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 10, Short.MAX_VALUE)
                 .addComponent(ProgressBar, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(btnCancel)
@@ -649,6 +666,12 @@ public class BackupUI extends javax.swing.JFrame {
         backup.setBackupUI(this);
         this.backupInProgress = true;
 
+        int rows = Integer.parseInt(this.txtRecordsPerBlock.getText().trim());
+        backup.setRows(rows);
+
+        // Guardar el número de registros por bloque
+        saveRecordsPerBlock();
+        
         if (!this.standalone) {
             backup.start();
         } else {
@@ -942,7 +965,7 @@ public class BackupUI extends javax.swing.JFrame {
             java.util.logging.Logger.getLogger(BackupUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
-        
+
         //</editor-fold>
 
         /* Create and display the form */
@@ -965,6 +988,7 @@ public class BackupUI extends javax.swing.JFrame {
     private javax.swing.JCheckBox chkOverrideDatabase;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
+    private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -985,6 +1009,7 @@ public class BackupUI extends javax.swing.JFrame {
     private javax.swing.JTextField txtNewDB;
     private javax.swing.JTextField txtOriginalDatabase;
     private javax.swing.JPasswordField txtPassword;
+    private javax.swing.JFormattedTextField txtRecordsPerBlock;
     private javax.swing.JTextField txtRestoredAs;
     private javax.swing.JTextField txtRestoredBy;
     private javax.swing.JTextField txtRestoredTo;
@@ -1477,7 +1502,7 @@ public class BackupUI extends javax.swing.JFrame {
             if (!sent) {
                 throw new Exception("Unable to send mail alerts");
             }
-            
+
         } catch (Exception ex) {
             log.error(ex.getMessage());
         }
@@ -1498,7 +1523,7 @@ public class BackupUI extends javax.swing.JFrame {
          */
 
         log.setConsoleOnly(false);
-        
+
         checkWaiting();
 
         // Server
@@ -1653,10 +1678,10 @@ public class BackupUI extends javax.swing.JFrame {
                 bkCon.setAutoCommit(true);
             }
             log.info(ids.size() + " expired backup files deleted.");
-            
+
             // Remove old files which are not tied to the database.
             this.removeOldFiles("zip", this.backupLife);
-            
+
         } catch (Exception ex) {
             // No need to execute a rollback since it executes implicitly when 
             // the connection closes before the transaction is not commited.
@@ -1675,10 +1700,10 @@ public class BackupUI extends javax.swing.JFrame {
             }
         }
     }
-    
+
     /*
     This method deletes files based on the creation date without checking database
-    */
+     */
     private void removeOldFiles(String destino, int days) {
         log.info("Checking file life cycle... Keeping " + days + " days.");
         Archivos archivos = new Archivos();
@@ -1697,8 +1722,52 @@ public class BackupUI extends javax.swing.JFrame {
                 log.error("\n" + BackupUI.class.getName() + "--> " + ex.getMessage());
             }
         } // end for
-        
+
         log.info(deleted + " deleted files.");
-        
+
     } // end removOldFiles
+
+    private void setRecordsPerBlock() {
+        try {
+            File file = new File("ReadingBlocks.properties");
+            if (!file.exists()) {
+                Properties props = new Properties();
+                props.setProperty("rows_per_block", "100"); // Default
+                props.store(new FileOutputStream(file), "Set the number or records to be processed per block in backup");
+            }
+            Properties props = Props.getProps(file);
+            this.txtRecordsPerBlock.setText(props.getProperty("rows_per_block"));
+        } catch (IOException ex) {
+            String msg = ex.getMessage()
+                    + "\nAn error occurred while attempting to read the file 'ReadingBlocks.properties'. The default value (100) will be used.";
+            if (this.standalone) {
+                this.log.warn(msg);
+            } else {
+                JOptionPane.showMessageDialog(null,
+                        msg, "Warning",
+                        JOptionPane.WARNING_MESSAGE);
+            }
+
+            this.txtRecordsPerBlock.setText("100");
+        }
+    }
+
+    private void saveRecordsPerBlock() {
+        try {
+            File file = new File("ReadingBlocks.properties");
+            Properties props = new Properties();
+            props.setProperty("rows_per_block", this.txtRecordsPerBlock.getText().trim());
+            props.store(new FileOutputStream(file), "Set the number or records to be processed per block in backup");
+        } catch (IOException ex) {
+            String msg = ex.getMessage()
+                    + "\nUnable to save records per block configuration.";
+            if (this.standalone) {
+                this.log.warn(msg);
+            } else {
+                JOptionPane.showMessageDialog(null,
+                        msg, "Warning",
+                        JOptionPane.WARNING_MESSAGE);
+            }
+        }
+    }
 }

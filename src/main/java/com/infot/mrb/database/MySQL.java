@@ -156,7 +156,7 @@ public class MySQL {
                 }
                 fileParts.writeContent(bufferedWriter, json);
             }
-            log.info("Processing " + currentRecord + " out of " + maxRecords);
+            log.info("Processing table " + table + " " + currentRecord + " out of " + maxRecords);
         }
 
         rs.close();
@@ -179,35 +179,22 @@ public class MySQL {
             JSONObject innerJson = new JSONObject();
 
             switch (columnType) {
-                case "TINYINT":
-                case "SMALLINT":
-                case "MEDIUMINT":
-                case "INT":
-                    value += resultSet.getInt(column);
-                    break;
-                case "BIGINT":
-                    value += resultSet.getLong(column);
-                    break;
-                case "FLOAT":
-                case "DOUBLE":
-                    value += resultSet.getDouble(column);
-                    break;
-                case "DECIMAL":
-                    value += resultSet.getBigDecimal(column);
-                    break;
-                case "BLOB":
-                case "LONGBLOB":
+                case "TINYINT", "SMALLINT", "MEDIUMINT", "INT" -> value += resultSet.getInt(column);
+                case "BIGINT" -> value += resultSet.getLong(column);
+                case "FLOAT", "DOUBLE" -> value += resultSet.getDouble(column);
+                case "DECIMAL" -> value += resultSet.getBigDecimal(column);
+                case "BLOB", "LONGBLOB" -> {
                     byte[] binaryData = resultSet.getBytes(column);
                     String base64Data = Base64.getEncoder().encodeToString(binaryData);
                     value += base64Data;
-                    break;
-                case "JSON":
+                }
+                case "JSON" -> {
                     if (resultSet.getString(column) != null) {
                         String temp = resultSet.getString(column);
                         innerJson = new JSONObject(temp);
                     }
-                    break;
-                default: //DATE, DATETIME, TIMESTAMP, VARCHAR, etc
+                }
+                default -> //DATE, DATETIME, TIMESTAMP, VARCHAR, etc
                     value += resultSet.getString(column);
             }
 
