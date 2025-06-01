@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 import javax.swing.JOptionPane;
 import log.Bitacora;
@@ -25,13 +27,24 @@ public class Backup extends Thread {
     private BackupUI backupUI;
     private String database;
     private final Bitacora log = new Bitacora();
+    private int recordsPerPage;
 
     @Override
     public void run() {
         createBackup();
     }
 
+    public int getRecordsPerPage() {
+        return recordsPerPage;
+    }
+
+    public void setRecordsPerPage(int recordsPerPage) {
+        this.recordsPerPage = recordsPerPage;
+    }
+
     public void createBackup() {
+        LocalDateTime startTime = LocalDateTime.now();
+
         FileParts fileParts = new FileParts();
 
         String schema = backupUI.getSchema();
@@ -65,7 +78,7 @@ public class Backup extends Thread {
         File folder;
 
         try {
-            MySQL engine = new MySQL(conn, database, 12); // Connection, schema & records per page
+            MySQL engine = new MySQL(conn, database, this.recordsPerPage); // Connection, schema & records per page
 
             // Create a directory with the name of the database
             folder = new File(database);
@@ -73,11 +86,11 @@ public class Backup extends Thread {
                 folder.mkdir();
             }
 
-            List<String> databaseTables = engine.getDatabaseTablesV2("TABLE");
-            List<String> databaseViews = engine.getDatabaseTablesV2("VIEW");
-            List<String> storedFunctions = engine.getRoutinesV2("FUNCTION");
-            List<String> storedProcedures = engine.getRoutinesV2("PROCEDURE");
-            List<String> triggers = engine.getTriggersV2();
+            List<String> databaseTables = engine.getDatabaseTables("TABLE");
+            List<String> databaseViews = engine.getDatabaseTables("VIEW");
+            List<String> storedFunctions = engine.getRoutines("FUNCTION");
+            List<String> storedProcedures = engine.getRoutines("PROCEDURE");
+            List<String> triggers = engine.getTriggers();
 
             /*
             Points for progress bar
@@ -89,7 +102,7 @@ public class Backup extends Thread {
             Stored procedure                1
             Trigger processed               1
              */
-            int records = engine.getRecordCountV2(databaseTables);
+            int records = engine.getRecordCount(databaseTables);
             int count = records
                     + databaseViews.size()
                     + storedFunctions.size()
@@ -232,11 +245,18 @@ public class Backup extends Thread {
             return;
         }
 
-        log.info("Backup complete!");
+        LocalDateTime endTime = LocalDateTime.now();
+        Duration duration = Duration.between(startTime, endTime);
+        long hours = duration.toHours();
+        long minutes = duration.toMinutes() % 60;
+        long seconds = duration.getSeconds() % 60;
+        String msg = String.format("\nBackup complete! -> %d hours, %d minutes, %d seconds%n \n", hours, minutes, seconds);
+        
+        log.info(msg);
 
         if (!backupUI.isStandalone()) {
             JOptionPane.showMessageDialog(null,
-                    "Backup complete",
+                    msg,
                     "Message",
                     JOptionPane.INFORMATION_MESSAGE);
         } else {

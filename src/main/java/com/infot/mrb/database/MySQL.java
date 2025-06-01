@@ -31,7 +31,7 @@ public class MySQL {
     private String schema;              // Database or schema
     private String table;               // Database table name
     private final Connection conn;      // Database connection
-    private final int rows;             // Number of rows per select
+    private final int recordsPerPage;   // Number of rows per select
     private List<String> columnNames;   // Table column names
     private List<String> columnTypes;   // Table column types
     private List<String> columnValues;  // Table column values
@@ -46,14 +46,14 @@ public class MySQL {
      * @param schema String default database
      * @param table String database table
      * @param conn Connection to the database
-     * @param rows int number of rows per page
+     * @param recordsPerPage int number of rows per page
      * @throws java.sql.SQLException
      */
-    public MySQL(String schema, String table, Connection conn, int rows) throws SQLException {
+    public MySQL(String schema, String table, Connection conn, int recordsPerPage) throws SQLException {
         this.schema = schema;
         this.table = table;
         this.conn = conn;
-        this.rows = rows;
+        this.recordsPerPage = recordsPerPage;
         this.log = new Bitacora();
         log.setConsoleOnly(true);
         this.columnNames = new ArrayList<>();
@@ -63,11 +63,11 @@ public class MySQL {
         useDefaultSchema();
     }
 
-    public MySQL(Connection conn, String schema, int rows) throws SQLException {
+    public MySQL(Connection conn, String schema, int recordsPerPage) throws SQLException {
         this.schema = schema; // Default database
         this.table = "";
         this.conn = conn;
-        this.rows = rows;
+        this.recordsPerPage = recordsPerPage;
         this.log = new Bitacora();
         log.setConsoleOnly(true);
         this.columnNames = new ArrayList<>();
@@ -124,7 +124,7 @@ public class MySQL {
         int maxRecords = rs.getInt(1);
         int currentRecord = 0;
         rs.close();
-        int records = rows;
+        int records = recordsPerPage;
 
         // Create the json file with all records
         bufferedWriter = fileParts.createFileWriter(this.schema, table + ".json", true);
@@ -140,7 +140,7 @@ public class MySQL {
                 }
             }
 
-            rs = statement.executeQuery("SELECT * FROM " + table + " LIMIT " + currentRecord + ", " + rows);
+            rs = statement.executeQuery("SELECT * FROM " + table + " LIMIT " + currentRecord + ", " + recordsPerPage);
 
             rs.last();
             int lastRecord = rs.getRow();
@@ -156,7 +156,7 @@ public class MySQL {
                 }
                 fileParts.writeContent(bufferedWriter, json);
             }
-            log.info("Processing " + currentRecord + " out of " + maxRecords);
+            log.info("Processing table " + table + " " + currentRecord + " out of " + maxRecords);
         }
 
         rs.close();
@@ -179,35 +179,22 @@ public class MySQL {
             JSONObject innerJson = new JSONObject();
 
             switch (columnType) {
-                case "TINYINT":
-                case "SMALLINT":
-                case "MEDIUMINT":
-                case "INT":
-                    value += resultSet.getInt(column);
-                    break;
-                case "BIGINT":
-                    value += resultSet.getLong(column);
-                    break;
-                case "FLOAT":
-                case "DOUBLE":
-                    value += resultSet.getDouble(column);
-                    break;
-                case "DECIMAL":
-                    value += resultSet.getBigDecimal(column);
-                    break;
-                case "BLOB":
-                case "LONGBLOB":
+                case "TINYINT", "SMALLINT", "MEDIUMINT", "INT" -> value += resultSet.getInt(column);
+                case "BIGINT" -> value += resultSet.getLong(column);
+                case "FLOAT", "DOUBLE" -> value += resultSet.getDouble(column);
+                case "DECIMAL" -> value += resultSet.getBigDecimal(column);
+                case "BLOB", "LONGBLOB" -> {
                     byte[] binaryData = resultSet.getBytes(column);
                     String base64Data = Base64.getEncoder().encodeToString(binaryData);
                     value += base64Data;
-                    break;
-                case "JSON":
+                }
+                case "JSON" -> {
                     if (resultSet.getString(column) != null) {
                         String temp = resultSet.getString(column);
                         innerJson = new JSONObject(temp);
                     }
-                    break;
-                default: //DATE, DATETIME, TIMESTAMP, VARCHAR, etc
+                }
+                default -> //DATE, DATETIME, TIMESTAMP, VARCHAR, etc
                     value += resultSet.getString(column);
             }
 
@@ -541,7 +528,7 @@ public class MySQL {
 
             switch (columnType) {
                 case "BIT" -> {
-                    boolean bValue = value.equals("1");
+                    boolean bValue = (value.equals("1") || value.equals("b'1'"));
                     ps.setBoolean(parameterPosition, bValue);
                 }
                 case "TINYINT", "SMALLINT", "MEDIUMINT", "INT" ->
@@ -582,23 +569,8 @@ public class MySQL {
         } while (listsIndex < columnNames.size() && !firstColumnNameInGroup.equals(columnNames.get(listsIndex)));
     }
 
-    public List<String> getDatabaseTables(String type) throws SQLException {
-        String tableType = type.equals("TABLE") ? "'BASE TABLE'" : "'VIEW'";
-        Statement statement = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-        List<String> databaseTables = new ArrayList<>();
-        String sqlSent
-                = "Select table_name from information_schema.tables "
-                + "where table_schema = '" + schema + "' and table_type = " + tableType;
-        try (ResultSet rs = statement.executeQuery(sqlSent)) {
-            while (rs.next()) {
-                databaseTables.add(rs.getString(1));
-            }
-        }
-        return databaseTables;
-    }
-
     // This method supports backward compatibility for databases migrated from MySQL into MariaDB 11.0
-    public List<String> getDatabaseTablesV2(String type) throws SQLException {
+    public List<String> getDatabaseTables(String type) throws SQLException {
         Statement statement = conn.createStatement(
                 ResultSet.TYPE_SCROLL_INSENSITIVE,
                 ResultSet.CONCUR_READ_ONLY);
@@ -628,23 +600,8 @@ public class MySQL {
         return databaseTables;
     }
 
-    public List<String> getRoutines(String type) throws SQLException {
-        Statement statement = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-        List<String> routines = new ArrayList<>();
-        String sqlSent
-                = "SELECT * FROM information_schema.routines "
-                + "WHERE routine_schema = '" + schema + "' AND "
-                + "ROUTINE_TYPE = '" + type + "'";
-        try (ResultSet rs = statement.executeQuery(sqlSent)) {
-            while (rs.next()) {
-                routines.add(rs.getString("ROUTINE_NAME"));
-            }
-        }
-        return routines;
-    }
-
     // This method supports backward compatibility for databases migrated from MySQL into MariaDB 11.0
-    public List<String> getRoutinesV2(String type) throws SQLException {
+    public List<String> getRoutines(String type) throws SQLException {
         Statement statement = conn.createStatement(
                 ResultSet.TYPE_SCROLL_INSENSITIVE,
                 ResultSet.CONCUR_READ_ONLY);
@@ -700,22 +657,9 @@ public class MySQL {
         fileParts.writeContent(bufferedWriter, content);
     }
 
-    public List<String> getTriggers() throws SQLException {
-        Statement statement = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-        List<String> triggers = new ArrayList<>();
-        String sqlSent
-                = "SELECT * FROM information_schema.triggers "
-                + "WHERE trigger_schema = '" + schema + "'";
-        try (ResultSet rs = statement.executeQuery(sqlSent)) {
-            while (rs.next()) {
-                triggers.add(rs.getString("TRIGGER_NAME"));
-            }
-        }
-        return triggers;
-    }
     
     // This method supports backward compatibility for databases migrated from MySQL into MariaDB 11.0
-    public List<String> getTriggersV2() throws SQLException {
+    public List<String> getTriggers() throws SQLException {
         Statement statement = conn.createStatement(
                 ResultSet.TYPE_SCROLL_INSENSITIVE, 
                 ResultSet.CONCUR_READ_ONLY);
@@ -752,32 +696,15 @@ public class MySQL {
         fileParts.writeContent(bufferedWriter, content);
     }
 
+    
     /**
-     * Counts the total records for a list of tables.
-     *
-     * @param tables List of tables.
-     * @return int total records
-     * @throws SQLException
+     * Get the total number of records for a list of tables.
+     * This method supports backward compatibility for databases migrated from MySQL into MariaDB 11.0
+     * @param tables List of tables
+     * @return int total record count
+     * @throws SQLException 
      */
     public int getRecordCount(List<String> tables) throws SQLException {
-
-        int records = 0;
-        try (Statement statement = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
-            for (String t : tables) {
-                String sqlSent = "SELECT COUNT(*) FROM " + t;
-
-                try (ResultSet rs = statement.executeQuery(sqlSent)) {
-                    while (rs.next()) {
-                        records += rs.getInt(1);
-                    }
-                }
-            }
-        }
-        return records;
-    }
-    
-    // This method supports backward compatibility for databases migrated from MySQL into MariaDB 11.0
-    public int getRecordCountV2(List<String> tables) throws SQLException {
 
         int records = 0;
         try (Statement statement = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
