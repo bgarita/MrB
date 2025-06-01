@@ -1,26 +1,3 @@
-Mejora urgente:
-El respaldo de la base de datos laflor tomó desde las 20:14:33 hasta 22:56:12
-lo que significa más de dos horas.
-
-Prueba: modificar los bloques de lectura y escritura y probar cuánto tiempo le toma volver a hacer el mismo respaldo.
-Agregar también el cálculo de tiempo y mostrarlo al final para saber cuánto tiempo duró sin tener que ir a los logs.
-Verificar también si es posible usar Callable y Future para aprovechar mejor el procesador.
-
-Prueba con bloques de 100 registros:
-Inicio: Sun Dec 15 11:59:18
-Fin:    Sun Dec 15 12:19:49
-Aproximadamente 20 minutos.
-
-Aumentar los bloques a 500 y probar.
-Inicio: Sun Dec 15 12:26:08 
-Fin:    Sun Dec 15 12:31:46 
-Aproximadamente 5 minutos.
-
-- Configurar la interfaz para que permita al usuario establecer el bloque de lectura de registros.
-- Modificar el proceso de lectura y escritura de propiedades para que tome el valor para los bloques de lectura
-  desde una propiedad en el archivo de propiedades
-- Modificar el log para que genere una línea en blaco, un total del tiempo y otra línea en blanco.
-  El propósito de este cambio es facilitar la revisión del log.
 
 PENDIENTES:
 1. Modificar el proceso de envío de correos para que use msg.html

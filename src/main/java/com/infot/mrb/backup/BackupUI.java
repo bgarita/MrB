@@ -667,7 +667,7 @@ public class BackupUI extends javax.swing.JFrame {
         this.backupInProgress = true;
 
         int rows = Integer.parseInt(this.txtRecordsPerBlock.getText().trim());
-        backup.setRows(rows);
+        backup.setRecordsPerPage(rows);
 
         // Guardar el número de registros por bloque
         saveRecordsPerBlock();
