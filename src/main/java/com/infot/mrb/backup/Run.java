@@ -37,10 +37,10 @@ public class Run {
         boolean runOnce = false;
         // Expected parameter -runOnce=true/false
         // true=Run only once
-        // false=Runs in schedulle (every <period of time>)
+        // false=Runs in scheduled mode (every <period of time>)
         if (args.length > 0) {
-            String[] param1 = args[0].split("=");
-            runOnce = param1[1].trim().equals("true");
+            String[] params = args[0].split("=");
+            runOnce = params[1].trim().equals("true");
         }
 
         // Si se recibió el parámetro de correr solo una vez

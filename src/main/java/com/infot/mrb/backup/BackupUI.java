@@ -19,16 +19,20 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.DefaultListModel;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JProgressBar;
+import javax.swing.ListModel;
 import javax.swing.table.DefaultTableModel;
 import log.Bitacora;
 
@@ -56,21 +60,6 @@ public class BackupUI extends javax.swing.JFrame {
      */
     public BackupUI(boolean standalone) {
         initComponents();
-        this.standalone = standalone;
-
-        // DEBUG:
-        //this.standalone = true;
-        // END DEBUG
-        this.backupInProgress = false;
-        this.restoreInProgress = false;
-
-        // Populate the connectionRecords list with all configured database connections.
-        loadConnectionRecords();
-
-        // Set the user and password fields with the right information
-        // according to the selected server (from the combo box).
-        // If combo is null initialize it.
-        setUser();
 
         // Add a Window Listener to validate process status before closing.
         addWindowListener(
@@ -82,10 +71,37 @@ public class BackupUI extends javax.swing.JFrame {
         }
         );
 
-        // Populate the database combo acconding to the selected server.
-        loadDatabaseNames();
+        this.standalone = standalone;
 
-        setBackupLife();
+        // DEBUG:
+        //this.standalone = true;
+        // END DEBUG
+        this.backupInProgress = false;
+        this.restoreInProgress = false;
+
+        try {
+            this.loadConfiguration();
+        } catch (IOException ex) {
+            if (!standalone) {
+                JOptionPane.showMessageDialog(null,
+                        ex.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+            log.error("Error loading configuration. " + ex.getMessage());
+            // Do not stop execution
+        }
+
+        // Populate the connectionRecords list with all configured database connections.
+        loadConnectionRecords();
+
+        // Set the user and password fields with the right information
+        // according to the selected server (from the combo box).
+        // If combo is null initialize it.
+        setUser();
+
+        // Populate the database combos acconding to the selected server.
+        loadDatabaseNames();
 
         // Delete expired backups
         deleteExpiredBackups();
@@ -124,7 +140,7 @@ public class BackupUI extends javax.swing.JFrame {
         btnAddServer = new javax.swing.JButton();
         btnCancel = new javax.swing.JButton();
         jTabbedPane1 = new javax.swing.JTabbedPane();
-        jPanel3 = new javax.swing.JPanel();
+        tabBackup = new javax.swing.JPanel();
         btnBackup = new javax.swing.JButton();
         jLabel4 = new javax.swing.JLabel();
         txtBackupDescription = new javax.swing.JTextField();
@@ -134,7 +150,7 @@ public class BackupUI extends javax.swing.JFrame {
         jLabel10 = new javax.swing.JLabel();
         jLabel11 = new javax.swing.JLabel();
         txtRecordsPerBlock = new javax.swing.JFormattedTextField();
-        jPanel2 = new javax.swing.JPanel();
+        tabRestore = new javax.swing.JPanel();
         jLabel3 = new javax.swing.JLabel();
         txtNewDB = new javax.swing.JTextField();
         chkOverrideDatabase = new javax.swing.JCheckBox();
@@ -153,6 +169,36 @@ public class BackupUI extends javax.swing.JFrame {
         jLabel9 = new javax.swing.JLabel();
         txtOriginalDatabase = new javax.swing.JTextField();
         btnRestoreFrom = new javax.swing.JButton();
+        tabConfig = new javax.swing.JPanel();
+        jLabel13 = new javax.swing.JLabel();
+        spnLife = new javax.swing.JSpinner();
+        cboPeriod = new javax.swing.JComboBox<>();
+        jLabel14 = new javax.swing.JLabel();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        lstDatabases = new javax.swing.JList<>();
+        cboBDInclude = new javax.swing.JComboBox<>();
+        btnRemoveDatabase = new javax.swing.JButton();
+        btnSaveConfiguration = new javax.swing.JButton();
+        jPanel2 = new javax.swing.JPanel();
+        jLabel15 = new javax.swing.JLabel();
+        jLabel16 = new javax.swing.JLabel();
+        jLabel17 = new javax.swing.JLabel();
+        jLabel18 = new javax.swing.JLabel();
+        chkAuth = new javax.swing.JCheckBox();
+        jLabel19 = new javax.swing.JLabel();
+        chkSTARTTLS = new javax.swing.JCheckBox();
+        txtSSL = new javax.swing.JTextField();
+        txtPlainPassword = new javax.swing.JTextField();
+        txtUsername = new javax.swing.JTextField();
+        txtHost = new javax.swing.JTextField();
+        txtPort = new javax.swing.JFormattedTextField();
+        jLabel20 = new javax.swing.JLabel();
+        jLabel21 = new javax.swing.JLabel();
+        spnHour = new javax.swing.JSpinner();
+        jLabel22 = new javax.swing.JLabel();
+        spnMinute = new javax.swing.JSpinner();
+        spnIntervalHours = new javax.swing.JSpinner();
+        jLabel23 = new javax.swing.JLabel();
         ProgressBar = new javax.swing.JProgressBar();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
@@ -269,48 +315,48 @@ public class BackupUI extends javax.swing.JFrame {
 
         txtRecordsPerBlock.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#0"))));
 
-        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
-        jPanel3.setLayout(jPanel3Layout);
-        jPanel3Layout.setHorizontalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel3Layout.createSequentialGroup()
+        javax.swing.GroupLayout tabBackupLayout = new javax.swing.GroupLayout(tabBackup);
+        tabBackup.setLayout(tabBackupLayout);
+        tabBackupLayout.setHorizontalGroup(
+            tabBackupLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(tabBackupLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addGap(0, 733, Short.MAX_VALUE)
+                .addGroup(tabBackupLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(tabBackupLayout.createSequentialGroup()
+                        .addGap(0, 738, Short.MAX_VALUE)
                         .addComponent(btnBackup))
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(tabBackupLayout.createSequentialGroup()
+                        .addGroup(tabBackupLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel4)
                             .addComponent(jLabel10))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(tabBackupLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(cboBD, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(txtBackupDescription, javax.swing.GroupLayout.DEFAULT_SIZE, 736, Short.MAX_VALUE)))
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(txtBackupDescription, javax.swing.GroupLayout.DEFAULT_SIZE, 741, Short.MAX_VALUE)))
+                    .addGroup(tabBackupLayout.createSequentialGroup()
+                        .addGroup(tabBackupLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(chkCompress)
                             .addComponent(chkEncrypt)
-                            .addGroup(jPanel3Layout.createSequentialGroup()
+                            .addGroup(tabBackupLayout.createSequentialGroup()
                                 .addComponent(jLabel11)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                 .addComponent(txtRecordsPerBlock, javax.swing.GroupLayout.PREFERRED_SIZE, 88, javax.swing.GroupLayout.PREFERRED_SIZE)))
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
-        jPanel3Layout.setVerticalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel3Layout.createSequentialGroup()
-                .addContainerGap(70, Short.MAX_VALUE)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+        tabBackupLayout.setVerticalGroup(
+            tabBackupLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(tabBackupLayout.createSequentialGroup()
+                .addContainerGap(71, Short.MAX_VALUE)
+                .addGroup(tabBackupLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cboBD, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel10))
                 .addGap(26, 26, 26)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(tabBackupLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel4)
                     .addComponent(txtBackupDescription, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(tabBackupLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel11)
                     .addComponent(txtRecordsPerBlock, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(13, 13, 13)
@@ -322,7 +368,7 @@ public class BackupUI extends javax.swing.JFrame {
                 .addContainerGap())
         );
 
-        jTabbedPane1.addTab("Backup", jPanel3);
+        jTabbedPane1.addTab("Backup", tabBackup);
 
         jLabel3.setText("Restore to");
 
@@ -484,43 +530,43 @@ public class BackupUI extends javax.swing.JFrame {
             }
         });
 
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
+        javax.swing.GroupLayout tabRestoreLayout = new javax.swing.GroupLayout(tabRestore);
+        tabRestore.setLayout(tabRestoreLayout);
+        tabRestoreLayout.setHorizontalGroup(
+            tabRestoreLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(tabRestoreLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(tabRestoreLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane1)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(tabRestoreLayout.createSequentialGroup()
+                        .addGroup(tabRestoreLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel5)
                             .addComponent(jLabel6)
                             .addComponent(jLabel8))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addGroup(tabRestoreLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(tabRestoreLayout.createSequentialGroup()
                                 .addComponent(txtRestoredAs, javax.swing.GroupLayout.PREFERRED_SIZE, 208, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jLabel9)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(txtOriginalDatabase))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, tabRestoreLayout.createSequentialGroup()
                                 .addComponent(txtRestoredBy, javax.swing.GroupLayout.PREFERRED_SIZE, 208, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jLabel7)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(txtRestoredTo))
-                            .addGroup(jPanel2Layout.createSequentialGroup()
+                            .addGroup(tabRestoreLayout.createSequentialGroup()
                                 .addComponent(txtDBId, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 17, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 22, Short.MAX_VALUE)
                                 .addComponent(txtZipFile, javax.swing.GroupLayout.PREFERRED_SIZE, 483, javax.swing.GroupLayout.PREFERRED_SIZE)))
                         .addGap(70, 70, 70)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(tabRestoreLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(btnRestore, javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(btnRestoreFrom, javax.swing.GroupLayout.Alignment.TRAILING))))
                 .addContainerGap())
-            .addGroup(jPanel2Layout.createSequentialGroup()
+            .addGroup(tabRestoreLayout.createSequentialGroup()
                 .addComponent(chkOverrideDatabase)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jLabel3)
@@ -528,47 +574,259 @@ public class BackupUI extends javax.swing.JFrame {
                 .addComponent(txtNewDB))
         );
 
-        jPanel2Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {txtRestoredAs, txtRestoredBy});
+        tabRestoreLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {txtRestoredAs, txtRestoredBy});
 
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
+        tabRestoreLayout.setVerticalGroup(
+            tabRestoreLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(tabRestoreLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 186, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                .addGroup(tabRestoreLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
                     .addComponent(jLabel3)
                     .addComponent(txtNewDB, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(chkOverrideDatabase))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(tabRestoreLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel5)
                     .addComponent(txtDBId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(txtZipFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btnRestore))
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
+                .addGroup(tabRestoreLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(tabRestoreLayout.createSequentialGroup()
                         .addGap(1, 1, 1)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addGroup(tabRestoreLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel6)
                             .addComponent(txtRestoredBy, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jLabel7)
                             .addComponent(txtRestoredTo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(2, 2, 2)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addGroup(tabRestoreLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(tabRestoreLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                                 .addComponent(jLabel9)
                                 .addComponent(txtOriginalDatabase, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addGroup(tabRestoreLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                                 .addComponent(jLabel8)
                                 .addComponent(txtRestoredAs, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
+                    .addGroup(tabRestoreLayout.createSequentialGroup()
                         .addGap(18, 18, 18)
                         .addComponent(btnRestoreFrom)))
-                .addContainerGap(16, Short.MAX_VALUE))
+                .addContainerGap(17, Short.MAX_VALUE))
         );
 
-        jTabbedPane1.addTab("Restore", jPanel2);
+        jTabbedPane1.addTab("Restore", tabRestore);
+
+        jLabel13.setText("Backup life");
+
+        cboPeriod.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Days", "Months" }));
+
+        jLabel14.setText("Databases included (standalone mode)");
+
+        lstDatabases.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        jScrollPane2.setViewportView(lstDatabases);
+
+        cboBDInclude.setToolTipText("Select a database");
+        cboBDInclude.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cboBDIncludeActionPerformed(evt);
+            }
+        });
+
+        btnRemoveDatabase.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        btnRemoveDatabase.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/left-arrow_15775947.png"))); // NOI18N
+        btnRemoveDatabase.setText("Remove");
+        btnRemoveDatabase.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnRemoveDatabaseActionPerformed(evt);
+            }
+        });
+
+        btnSaveConfiguration.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        btnSaveConfiguration.setText("Save");
+        btnSaveConfiguration.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSaveConfigurationActionPerformed(evt);
+            }
+        });
+
+        jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("Email config"));
+
+        jLabel15.setText("Host");
+
+        jLabel16.setText("Port");
+
+        jLabel17.setText("User");
+
+        jLabel18.setText("Password");
+
+        chkAuth.setSelected(true);
+        chkAuth.setText("Authentication");
+
+        jLabel19.setText("Secure Sockets Layer (SSL)");
+
+        chkSTARTTLS.setSelected(true);
+        chkSTARTTLS.setText("Start Trasport Layer Security (TLS)");
+
+        txtPort.setText("587");
+
+        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel18)
+                    .addComponent(jLabel17)
+                    .addComponent(jLabel16)
+                    .addComponent(jLabel15)
+                    .addComponent(jLabel19, javax.swing.GroupLayout.DEFAULT_SIZE, 161, Short.MAX_VALUE))
+                .addGap(12, 12, 12)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(txtHost, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 305, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtPort, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 305, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtUsername, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 305, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtPlainPassword, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 305, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtSSL, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 305, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addGap(6, 6, 6)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(chkSTARTTLS, javax.swing.GroupLayout.PREFERRED_SIZE, 210, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(chkAuth))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        jPanel2Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {txtHost, txtPlainPassword, txtPort, txtSSL, txtUsername});
+
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addGap(4, 4, 4)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel15)
+                    .addComponent(txtHost, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(4, 4, 4)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel16)
+                    .addComponent(txtPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(4, 4, 4)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel17)
+                    .addComponent(txtUsername, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(4, 4, 4)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel18)
+                    .addComponent(txtPlainPassword, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(4, 4, 4)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel19)
+                    .addComponent(txtSSL, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(chkAuth)
+                .addGap(4, 4, 4)
+                .addComponent(chkSTARTTLS)
+                .addContainerGap(9, Short.MAX_VALUE))
+        );
+
+        jLabel20.setText("Start time");
+
+        jLabel21.setText("Interval");
+
+        jLabel22.setText(":");
+
+        jLabel23.setText("hours");
+
+        javax.swing.GroupLayout tabConfigLayout = new javax.swing.GroupLayout(tabConfig);
+        tabConfig.setLayout(tabConfigLayout);
+        tabConfigLayout.setHorizontalGroup(
+            tabConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(tabConfigLayout.createSequentialGroup()
+                .addGroup(tabConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(tabConfigLayout.createSequentialGroup()
+                        .addGap(15, 15, 15)
+                        .addGroup(tabConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(tabConfigLayout.createSequentialGroup()
+                                .addComponent(jLabel14)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(cboBDInclude, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addGroup(tabConfigLayout.createSequentialGroup()
+                                .addGroup(tabConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(tabConfigLayout.createSequentialGroup()
+                                        .addComponent(jLabel13)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(spnLife, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(cboPeriod, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addGroup(tabConfigLayout.createSequentialGroup()
+                                        .addComponent(jLabel21)
+                                        .addGap(18, 18, 18)
+                                        .addComponent(spnIntervalHours, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jLabel23)))
+                                .addGap(0, 0, Short.MAX_VALUE))
+                            .addGroup(tabConfigLayout.createSequentialGroup()
+                                .addGroup(tabConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(tabConfigLayout.createSequentialGroup()
+                                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 178, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(btnRemoveDatabase))
+                                    .addGroup(tabConfigLayout.createSequentialGroup()
+                                        .addComponent(jLabel20)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(spnHour, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addGap(2, 2, 2)
+                                        .addComponent(jLabel22)
+                                        .addGap(2, 2, 2)
+                                        .addComponent(spnMinute, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, tabConfigLayout.createSequentialGroup()
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(btnSaveConfiguration)))
+                .addContainerGap())
+        );
+        tabConfigLayout.setVerticalGroup(
+            tabConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(tabConfigLayout.createSequentialGroup()
+                .addGap(12, 12, 12)
+                .addGroup(tabConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel13)
+                    .addComponent(spnLife, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(cboPeriod, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(tabConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel14)
+                    .addComponent(cboBDInclude, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(4, 4, 4)
+                .addGroup(tabConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                    .addComponent(btnRemoveDatabase)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 188, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(tabConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(tabConfigLayout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(btnSaveConfiguration))
+                    .addGroup(tabConfigLayout.createSequentialGroup()
+                        .addGap(5, 5, 5)
+                        .addGroup(tabConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel20)
+                            .addComponent(spnHour, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel22)
+                            .addComponent(spnMinute, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(2, 2, 2)
+                        .addGroup(tabConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel21)
+                            .addComponent(spnIntervalHours, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel23))
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
+            .addGroup(javax.swing.GroupLayout.Alignment.CENTER, tabConfigLayout.createSequentialGroup()
+                .addGap(66, 66, 66)
+                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(53, 53, 53))
+        );
+
+        jTabbedPane1.addTab("Config", tabConfig);
 
         ProgressBar.setToolTipText("");
         ProgressBar.setStringPainted(true);
@@ -595,8 +853,8 @@ public class BackupUI extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(8, 8, 8)
-                .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 10, Short.MAX_VALUE)
+                .addComponent(jTabbedPane1)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(ProgressBar, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(btnCancel)
@@ -671,7 +929,7 @@ public class BackupUI extends javax.swing.JFrame {
 
         // Guardar el número de registros por bloque
         saveRecordsPerBlock();
-        
+
         if (!this.standalone) {
             backup.start();
         } else {
@@ -945,6 +1203,40 @@ public class BackupUI extends javax.swing.JFrame {
 
     }//GEN-LAST:event_btnRestoreFromActionPerformed
 
+    private void cboBDIncludeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboBDIncludeActionPerformed
+        Set<String> dbs = new TreeSet<>(); // Avoid duplicates and sort items
+        DefaultListModel<String> model = (DefaultListModel<String>) this.lstDatabases.getModel();
+        for (int i = 0; i < model.size(); i++) {
+            dbs.add(model.get(i));
+        }
+        dbs.add(cboBDInclude.getSelectedItem().toString());
+        model.clear();
+        dbs.forEach(db -> model.addElement(db));
+        this.lstDatabases.setModel(model);
+    }//GEN-LAST:event_cboBDIncludeActionPerformed
+
+    private void btnRemoveDatabaseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRemoveDatabaseActionPerformed
+        String selectedDatabase = this.lstDatabases.getSelectedValue();
+        if (selectedDatabase == null) {
+            JOptionPane.showMessageDialog(null,
+                    "No database selected (on the left).",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        DefaultListModel<String> model = (DefaultListModel) this.lstDatabases.getModel();
+        model.removeElement(selectedDatabase);
+        this.lstDatabases.setModel(model);
+    }//GEN-LAST:event_btnRemoveDatabaseActionPerformed
+
+    private void btnSaveConfigurationActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveConfigurationActionPerformed
+        try {
+            saveGeneralConfiguration();
+        } catch (IOException ex) {
+            log.error(ex.getMessage());
+        }
+    }//GEN-LAST:event_btnSaveConfigurationActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -979,18 +1271,35 @@ public class BackupUI extends javax.swing.JFrame {
     private javax.swing.JButton btnAddServer;
     private javax.swing.JButton btnBackup;
     private javax.swing.JButton btnCancel;
+    private javax.swing.JButton btnRemoveDatabase;
     private javax.swing.JButton btnRestore;
     private javax.swing.JButton btnRestoreFrom;
+    private javax.swing.JButton btnSaveConfiguration;
     private javax.swing.JComboBox<String> cboBD;
+    private javax.swing.JComboBox<String> cboBDInclude;
+    private javax.swing.JComboBox<String> cboPeriod;
     private javax.swing.JComboBox<String> cboServer;
+    private javax.swing.JCheckBox chkAuth;
     private javax.swing.JCheckBox chkCompress;
     private javax.swing.JCheckBox chkEncrypt;
     private javax.swing.JCheckBox chkOverrideDatabase;
+    private javax.swing.JCheckBox chkSTARTTLS;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel12;
+    private javax.swing.JLabel jLabel13;
+    private javax.swing.JLabel jLabel14;
+    private javax.swing.JLabel jLabel15;
+    private javax.swing.JLabel jLabel16;
+    private javax.swing.JLabel jLabel17;
+    private javax.swing.JLabel jLabel18;
+    private javax.swing.JLabel jLabel19;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel20;
+    private javax.swing.JLabel jLabel21;
+    private javax.swing.JLabel jLabel22;
+    private javax.swing.JLabel jLabel23;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
@@ -1000,20 +1309,33 @@ public class BackupUI extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
-    private javax.swing.JPanel jPanel3;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTabbedPane jTabbedPane1;
+    private javax.swing.JList<String> lstDatabases;
+    private javax.swing.JSpinner spnHour;
+    private javax.swing.JSpinner spnIntervalHours;
+    private javax.swing.JSpinner spnLife;
+    private javax.swing.JSpinner spnMinute;
+    private javax.swing.JPanel tabBackup;
+    private javax.swing.JPanel tabConfig;
+    private javax.swing.JPanel tabRestore;
     private javax.swing.JTable tblDB;
     private javax.swing.JTextField txtBackupDescription;
     private javax.swing.JTextField txtDBId;
+    private javax.swing.JTextField txtHost;
     private javax.swing.JTextField txtNewDB;
     private javax.swing.JTextField txtOriginalDatabase;
     private javax.swing.JPasswordField txtPassword;
+    private javax.swing.JTextField txtPlainPassword;
+    private javax.swing.JFormattedTextField txtPort;
     private javax.swing.JFormattedTextField txtRecordsPerBlock;
     private javax.swing.JTextField txtRestoredAs;
     private javax.swing.JTextField txtRestoredBy;
     private javax.swing.JTextField txtRestoredTo;
+    private javax.swing.JTextField txtSSL;
     private javax.swing.JTextField txtUser;
+    private javax.swing.JTextField txtUsername;
     private javax.swing.JTextField txtZipFile;
     // End of variables declaration//GEN-END:variables
 
@@ -1254,7 +1576,7 @@ public class BackupUI extends javax.swing.JFrame {
     }
 
     private void setDefaultDescription() {
-        Date now = GregorianCalendar.getInstance().getTime();
+        Date now = Calendar.getInstance().getTime();
         SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy HH:mm");
         this.txtBackupDescription.setText(
                 this.cboServer.getSelectedItem() + " (" + cboBD.getSelectedItem() + ") " + sdf.format(now));
@@ -1335,6 +1657,7 @@ public class BackupUI extends javax.swing.JFrame {
             rs = ps.executeQuery();
 
             fillComboBox(cboBD, rs, 1, true);
+            fillComboBox(cboBDInclude, rs, 1, true);
             ps.close();
         } catch (Exception ex) {
             if (!this.standalone) {
@@ -1518,7 +1841,7 @@ public class BackupUI extends javax.swing.JFrame {
         The property files used here do not contain any sensitive data. User, password,
         port and any other configuration item is taken from the database when the system
         starts.
-        Here we only use server and database properties in order to set thouse values
+        Here we only use server and database properties in order to set those values
         to set the necessary validation data.
          */
 
@@ -1592,29 +1915,6 @@ public class BackupUI extends javax.swing.JFrame {
                 log.error(ex.getMessage() + "\nTiemout");
                 dispose();
             }
-        }
-    }
-
-    public final void setBackupLife() {
-        try {
-            // If backupslife.properties file does not exists, create it.
-            Properties props = new Properties();
-            File lifeFile = new File("backupslife.properties");
-            if (!lifeFile.exists()) {
-                props.clear();
-                props.setProperty("keep", (60 * 5) + ""); // 60*5=5 years
-                props.setProperty("period", "days");
-                props.store(new FileOutputStream(lifeFile), "Set backup life time");
-                props.clear();
-            }
-            Properties life = Props.getProps(new File("backupslife.properties"));
-            String keep = life.getProperty("keep");
-            String period = life.getProperty("period");
-
-            // Convert to days (use base 360 for months).
-            this.backupLife = period.equals("days") ? Integer.parseInt(keep) : Integer.parseInt(keep) * 30;
-        } catch (IOException ex) {
-            this.backupLife = 60 * 5; // defaults to 5 years
         }
     }
 
@@ -1769,5 +2069,152 @@ public class BackupUI extends javax.swing.JFrame {
                         JOptionPane.WARNING_MESSAGE);
             }
         }
+    }
+
+    private void loadConfiguration() throws IOException {
+        this.backupLife = 360 * 5; // defaults to 5 years
+        try {
+            // Backup life
+            String period = "days";
+
+            // If backupslife.properties file does not exists, create it.
+            Properties props = new Properties();
+            String propsFileName = "backupslife.properties";
+            File lifeFile = new File(propsFileName);
+
+            if (!lifeFile.exists()) {
+                props.clear();
+                props.setProperty("keep", this.backupLife + "");
+                props.setProperty("period", period);
+                props.store(new FileOutputStream(lifeFile), "Set backup life time");
+            } else {
+                props = Props.getProps(new File("backupslife.properties"));
+                backupLife = Integer.parseInt(props.getProperty("keep"));
+                period = props.getProperty("period");
+            }
+            props.clear();
+
+            this.spnLife.setValue(this.backupLife);
+            this.cboPeriod.setSelectedIndex(0); // days
+            if (period.equals("months")) {
+                this.cboPeriod.setSelectedIndex(1);
+                this.backupLife = this.backupLife * 30; // 360 base.
+            }
+
+            // database list
+            propsFileName = "dblist.properties";
+            props = Props.getProps(new File(propsFileName));
+            Enumeration<?> en = props.propertyNames();
+            DefaultListModel<String> model = new DefaultListModel<>();
+            while (en.hasMoreElements()) {
+                String key = (String) en.nextElement();
+                String value = props.getProperty(key);
+                model.addElement(value);
+            } // end while
+            this.lstDatabases.setModel(model);
+            props.clear();
+
+            // Scheduling
+            propsFileName = "schedule.properties";
+            props = Props.getProps(new File(propsFileName));
+            String[] startTime = props.getProperty("startTime").split(":");
+            String[] interval = props.getProperty("interval").split("-");
+            this.spnHour.setValue(Integer.valueOf(startTime[0]));
+            this.spnMinute.setValue(Integer.valueOf(startTime[1]));
+            this.spnIntervalHours.setValue(Integer.valueOf(interval[0]));
+            props.clear();
+
+            // Email
+            propsFileName = "mail.properties";
+            props = Props.getProps(new File(propsFileName));
+            String starttls = props.getProperty("mail.smtp.starttls.enable");    // true/false
+            String port = props.getProperty("mail.smtp.port");
+            String user = props.getProperty("mail.smtp.user");
+            String sslTrust = props.getProperty("mail.smtp.ssl.trust");
+            String auth = props.getProperty("mail.smtp.auth");            // true/false
+            String host = props.getProperty("mail.smtp.host");
+            String clave = props.getProperty("mail.smtp.clave");
+
+            this.txtHost.setText(host);
+            this.txtPort.setText(port);
+            this.txtUsername.setText(user);
+            this.txtPlainPassword.setText(clave);
+            this.txtSSL.setText(sslTrust);
+            this.chkAuth.setSelected(auth.equals("true"));
+            this.chkSTARTTLS.setSelected(starttls.equals("true"));
+
+        } catch (IOException ex) {
+            log.error(ex.getMessage());
+        }
+    }
+
+    private void saveGeneralConfiguration() throws IOException {
+        // Backup life
+        this.backupLife = Integer.parseInt(this.spnLife.getValue().toString());
+        String period = "days";
+        if (this.cboPeriod.getSelectedIndex() != 0) {
+            period = "months";
+        }
+        
+        Properties props = new Properties();
+        String propsFileName = "backupslife.properties";
+        try {
+            File lifeFile = new File(propsFileName);
+            props.setProperty("keep", this.backupLife + "");
+            props.setProperty("period", period);
+            props.store(new FileOutputStream(lifeFile), "Set backup life time");
+            props.clear();
+
+            // database list
+            propsFileName = "dblist.properties";
+            ListModel<String> model = this.lstDatabases.getModel();
+            for (int i = 0; i < model.getSize(); i++) {
+                String dbName = model.getElementAt(i);
+                props.setProperty(dbName + ".key", dbName);
+            }
+            props.store(new FileOutputStream(propsFileName), "Databases which will backed-up");
+            props.clear();
+
+            // Scheduling
+            propsFileName = "schedule.properties";
+            props.setProperty("startTime", this.spnHour.getValue() + ":" + this.spnMinute.getValue());
+            props.setProperty("interval", this.spnIntervalHours.getValue() + "-H");
+            props.store(new FileOutputStream(propsFileName), "Backup schedule");
+            props.clear();
+            
+            // Email
+            propsFileName = "mail.properties";
+            String starttls = this.chkSTARTTLS.isSelected() ? "true" : "false";
+            String port = this.txtPort.getText();
+            String user = this.txtUsername.getText();
+            String sslTrust = this.txtSSL.getText();
+            String auth = this.chkAuth.isSelected() ? "true" : "false";
+            String host = this.txtHost.getText();
+            String clave = this.txtPlainPassword.getText();
+            
+            props.setProperty("mail.smtp.starttls.enable", starttls);
+            props.setProperty("mail.smtp.port", port);
+            props.setProperty("mail.smtp.user", user);
+            props.setProperty("mail.smtp.ssl.trust", sslTrust);
+            props.setProperty("mail.smtp.auth", auth);
+            props.setProperty("mail.smtp.host", host);
+            props.setProperty("mail.smtp.clave", clave);
+            props.store(new FileOutputStream(propsFileName), "Parameters for sending emails");
+        } catch (IOException ex) {
+            String msg = ex.getMessage() + "\nGeneral configuration not saved.";
+            JOptionPane.showMessageDialog(
+                    null, 
+                    msg, 
+                    "Error", 
+                    JOptionPane.ERROR_MESSAGE);
+            log.error(msg);
+            return;
+        }
+        
+        JOptionPane.showMessageDialog(
+                null, 
+                "Configuration saved.", 
+                "Info", 
+                JOptionPane.INFORMATION_MESSAGE);
     }
 }
