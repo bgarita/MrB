@@ -245,6 +245,7 @@ public class ZipFiles {
 
             while ((ze = zis.getNextEntry()) != null) {
                 String fileName = getFileName(ze.getName());
+                log.info("Extracting files " + fileName);
                 File newFile = new File(outputFolder + File.separator + fileName);
 
                 try (FileOutputStream fos = new FileOutputStream(newFile)) {

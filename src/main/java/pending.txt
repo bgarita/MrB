@@ -1,4 +1,3 @@
 
 PENDIENTES:
-1. Modificar el proceso de envío de correos para que use msg.html
-2. Probar la bitcora de colores usando shell
+1. Probar la bitcora de colores usando shell

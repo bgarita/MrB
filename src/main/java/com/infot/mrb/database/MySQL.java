@@ -423,6 +423,8 @@ public class MySQL {
             return;
         }
 
+        // For each json file 3 lists are populated:
+        // columnNames, columnTypes and columnValues
         pupulateListsFromJson(rootNode);
 
         String sqlTable = jsonFile.getName().replace(".json", "");

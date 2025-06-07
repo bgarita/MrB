@@ -26,8 +26,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -1008,7 +1006,6 @@ public class BackupUI extends javax.swing.JFrame {
             // Save configuration before restoring database.
             saveConfiguration();
         } catch (Exception ex) {
-            Logger.getLogger(BackupUI.class.getName()).log(Level.SEVERE, null, ex);
             JOptionPane.showInternalMessageDialog(
                     null, ex.getMessage(),
                     "Error",
