@@ -235,7 +235,7 @@ public class Server extends javax.swing.JDialog {
                 return;
             }
 
-        } catch (ClassNotFoundException | SQLException ex) {
+        } catch (SQLException ex) {
             JOptionPane.showMessageDialog(null,
                     ex.getMessage(),
                     "ERROR",

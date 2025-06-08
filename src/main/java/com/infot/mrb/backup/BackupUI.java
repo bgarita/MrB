@@ -1491,7 +1491,7 @@ public class BackupUI extends javax.swing.JFrame {
         Connection conn;
         try {
             conn = DBConnection.getBkConnection();
-        } catch (ClassNotFoundException | SQLException ex) {
+        } catch (SQLException | IOException ex) {
             String msg = ex.getMessage() + "\nBackup information will not be saved.\nloadData()";
             if (!this.standalone) {
                 JOptionPane.showMessageDialog(

@@ -2,11 +2,15 @@ package com.infot.mrb.database;
 
 import com.infot.mrb.backup.ConnectionRecord;
 import com.infot.mrb.backup.Encryption;
+import com.infot.mrb.utilities.Props;
+import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Properties;
 import log.Bitacora;
 
 /**
@@ -14,13 +18,13 @@ import log.Bitacora;
  * @author Bosco Garita, Enero 2023
  */
 public class DBConnection {
-    
+
     private final static Bitacora log = new Bitacora();
 
     /*
     Every encrypted text could be different each time then we cannot test against an encrypted text, 
     inestead we must compare the decrypted text.
-    */
+     */
     private static ConnectionRecord getConnectionRecord(String serverName) throws Exception {
         boolean retrieveAllRecords = (serverName == null || serverName.isBlank());
         ConnectionRecord connectionRecord = new ConnectionRecord();
@@ -46,7 +50,6 @@ public class DBConnection {
         return connectionRecord;
     }
 
-    
     public static Connection getConnection(
             String user, char passwordArray[], String serverName, String schema) throws Exception {
 
@@ -72,7 +75,7 @@ public class DBConnection {
 
         String jdbcUrl = "jdbc:mariadb://" + connectionRecord.getIp() + ":" + connectionRecord.getPort() + "/" + connectionRecord.getDefaultSchema();
         log.info("Trying connection...");
-        
+
         Connection connection;
 
         // Set (remote) connection to extract data
@@ -89,7 +92,7 @@ public class DBConnection {
         return connection;
     }
 
-    public static Connection getConnection(String IP, String port, String user, String password, String schema) throws ClassNotFoundException, SQLException {
+    public static Connection getConnection(String IP, String port, String user, String password, String schema) throws SQLException {
 
         String database = schema;
 
@@ -109,17 +112,20 @@ public class DBConnection {
     }
 
     /**
-     * This connection is used by the system only. Creates a connection to a
+     * This connection is used by the system only.Creates a connection to a
      * local MySQL instance to maintain its database.
      *
      * @return
-     * @throws ClassNotFoundException
+     * @throws java.io.IOException
      * @throws SQLException
      */
-    public static Connection getBkConnection() throws ClassNotFoundException, SQLException {
+    public static Connection getBkConnection() throws IOException, SQLException {
 
-        String user = "bk";
-        String password = "KSWGkq01&MLu*";
+        File propsFile = new File("privateKeys.properties");
+        Properties props = Props.getProps(propsFile);
+        
+        String user = props.getProperty("mr.bk.user");
+        String password = props.getProperty("bk.password");
 
         String jdbcUrl = "jdbc:mariadb://127.0.0.1:3308/bk";
 

@@ -179,10 +179,14 @@ public class MySQL {
             JSONObject innerJson = new JSONObject();
 
             switch (columnType) {
-                case "TINYINT", "SMALLINT", "MEDIUMINT", "INT" -> value += resultSet.getInt(column);
-                case "BIGINT" -> value += resultSet.getLong(column);
-                case "FLOAT", "DOUBLE" -> value += resultSet.getDouble(column);
-                case "DECIMAL" -> value += resultSet.getBigDecimal(column);
+                case "TINYINT", "SMALLINT", "MEDIUMINT", "INT" ->
+                    value += resultSet.getInt(column);
+                case "BIGINT" ->
+                    value += resultSet.getLong(column);
+                case "FLOAT", "DOUBLE" ->
+                    value += resultSet.getDouble(column);
+                case "DECIMAL" ->
+                    value += resultSet.getBigDecimal(column);
                 case "BLOB", "LONGBLOB" -> {
                     byte[] binaryData = resultSet.getBytes(column);
                     String base64Data = Base64.getEncoder().encodeToString(binaryData);
@@ -412,9 +416,13 @@ public class MySQL {
     }
 
     private void loadJsonData(File jsonFile) throws SQLException, IOException {
+        // Nota: ObjectMapper no es muy eficiente con tablas grandes.
+        // Podría agotar la memoria.
+        // Buscar una alternativa.
+        // Estudiar: JsonFactory, JsonParser, JsonToken 07/06/2025
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode rootNode = objectMapper.readTree(jsonFile);
-
+        
         // If json is empty won't continue.
         if (rootNode.isArray() && rootNode.size() == 0) {
             log.setConsoleOnly(false);
@@ -423,7 +431,7 @@ public class MySQL {
             return;
         }
 
-        // For each json file 3 lists are populated:
+        // For each json file, 3 lists are populated:
         // columnNames, columnTypes and columnValues
         pupulateListsFromJson(rootNode);
 
@@ -431,7 +439,7 @@ public class MySQL {
 
         String firstColumn = columnNames.get(0);
 
-        // Crate the sql INSERT sentence
+        // Create the sql INSERT sentence
         String sql = prepareSQL(sqlTable);
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -470,7 +478,7 @@ public class MySQL {
         }
     }
 
-    private String prepareSQL(String table) throws SQLException {
+    public String prepareSQL(String table) throws SQLException {
         StringBuilder sql = new StringBuilder();
         sql.append("INSERT INTO `").append(table).append("` VALUES (");
         int numberOfColumns = countColumns();
@@ -659,11 +667,10 @@ public class MySQL {
         fileParts.writeContent(bufferedWriter, content);
     }
 
-    
     // This method supports backward compatibility for databases migrated from MySQL into MariaDB 11.0
     public List<String> getTriggers() throws SQLException {
         Statement statement = conn.createStatement(
-                ResultSet.TYPE_SCROLL_INSENSITIVE, 
+                ResultSet.TYPE_SCROLL_INSENSITIVE,
                 ResultSet.CONCUR_READ_ONLY);
         List<String> triggers = new ArrayList<>();
         String sqlSent = "SHOW TRIGGERS FROM " + this.schema;
@@ -698,13 +705,14 @@ public class MySQL {
         fileParts.writeContent(bufferedWriter, content);
     }
 
-    
     /**
-     * Get the total number of records for a list of tables.
-     * This method supports backward compatibility for databases migrated from MySQL into MariaDB 11.0
+     * Get the total number of records for a list of tables. This method
+     * supports backward compatibility for databases migrated from MySQL into
+     * MariaDB 11.0
+     *
      * @param tables List of tables
      * @return int total record count
-     * @throws SQLException 
+     * @throws SQLException
      */
     public int getRecordCount(List<String> tables) throws SQLException {
 
