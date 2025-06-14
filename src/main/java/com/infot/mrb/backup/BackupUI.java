@@ -26,8 +26,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -60,6 +58,9 @@ public class BackupUI extends javax.swing.JFrame {
      */
     public BackupUI(boolean standalone) {
         initComponents();
+        
+        // This progress bar will only be visible when restoring.
+        this.ProgressBar1.setVisible(false);
 
         // Add a Window Listener to validate process status before closing.
         addWindowListener(
@@ -199,6 +200,7 @@ public class BackupUI extends javax.swing.JFrame {
         spnMinute = new javax.swing.JSpinner();
         spnIntervalHours = new javax.swing.JSpinner();
         jLabel23 = new javax.swing.JLabel();
+        ProgressBar1 = new javax.swing.JProgressBar();
         ProgressBar = new javax.swing.JProgressBar();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
@@ -323,7 +325,7 @@ public class BackupUI extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(tabBackupLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(tabBackupLayout.createSequentialGroup()
-                        .addGap(0, 738, Short.MAX_VALUE)
+                        .addGap(0, 741, Short.MAX_VALUE)
                         .addComponent(btnBackup))
                     .addGroup(tabBackupLayout.createSequentialGroup()
                         .addGroup(tabBackupLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -332,7 +334,7 @@ public class BackupUI extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(tabBackupLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(cboBD, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(txtBackupDescription, javax.swing.GroupLayout.DEFAULT_SIZE, 741, Short.MAX_VALUE)))
+                            .addComponent(txtBackupDescription, javax.swing.GroupLayout.DEFAULT_SIZE, 744, Short.MAX_VALUE)))
                     .addGroup(tabBackupLayout.createSequentialGroup()
                         .addGroup(tabBackupLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(chkCompress)
@@ -347,7 +349,7 @@ public class BackupUI extends javax.swing.JFrame {
         tabBackupLayout.setVerticalGroup(
             tabBackupLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(tabBackupLayout.createSequentialGroup()
-                .addContainerGap(71, Short.MAX_VALUE)
+                .addContainerGap(83, Short.MAX_VALUE)
                 .addGroup(tabBackupLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cboBD, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel10))
@@ -559,7 +561,7 @@ public class BackupUI extends javax.swing.JFrame {
                                 .addComponent(txtRestoredTo))
                             .addGroup(tabRestoreLayout.createSequentialGroup()
                                 .addComponent(txtDBId, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 22, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 25, Short.MAX_VALUE)
                                 .addComponent(txtZipFile, javax.swing.GroupLayout.PREFERRED_SIZE, 483, javax.swing.GroupLayout.PREFERRED_SIZE)))
                         .addGap(70, 70, 70)
                         .addGroup(tabRestoreLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -611,7 +613,7 @@ public class BackupUI extends javax.swing.JFrame {
                     .addGroup(tabRestoreLayout.createSequentialGroup()
                         .addGap(18, 18, 18)
                         .addComponent(btnRestoreFrom)))
-                .addContainerGap(17, Short.MAX_VALUE))
+                .addContainerGap(29, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Restore", tabRestore);
@@ -680,7 +682,7 @@ public class BackupUI extends javax.swing.JFrame {
                     .addComponent(jLabel17)
                     .addComponent(jLabel16)
                     .addComponent(jLabel15)
-                    .addComponent(jLabel19, javax.swing.GroupLayout.DEFAULT_SIZE, 161, Short.MAX_VALUE))
+                    .addComponent(jLabel19, javax.swing.GroupLayout.DEFAULT_SIZE, 164, Short.MAX_VALUE))
                 .addGap(12, 12, 12)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(txtHost, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 305, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -828,6 +830,9 @@ public class BackupUI extends javax.swing.JFrame {
 
         jTabbedPane1.addTab("Config", tabConfig);
 
+        ProgressBar1.setToolTipText("");
+        ProgressBar1.setStringPainted(true);
+
         ProgressBar.setToolTipText("");
         ProgressBar.setStringPainted(true);
 
@@ -835,17 +840,20 @@ public class BackupUI extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(btnCancel)
-                .addGap(6, 6, 6))
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jTabbedPane1)
-                    .addComponent(ProgressBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(ProgressBar1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(49, 49, 49)
+                        .addComponent(btnCancel)
+                        .addGap(6, 6, 6))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jTabbedPane1))
+                        .addContainerGap())
+                    .addComponent(ProgressBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -854,10 +862,12 @@ public class BackupUI extends javax.swing.JFrame {
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(8, 8, 8)
                 .addComponent(jTabbedPane1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGap(10, 10, 10)
                 .addComponent(ProgressBar, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(btnCancel)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(btnCancel)
+                    .addComponent(ProgressBar1, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
 
@@ -1008,7 +1018,6 @@ public class BackupUI extends javax.swing.JFrame {
             // Save configuration before restoring database.
             saveConfiguration();
         } catch (Exception ex) {
-            Logger.getLogger(BackupUI.class.getName()).log(Level.SEVERE, null, ex);
             JOptionPane.showInternalMessageDialog(
                     null, ex.getMessage(),
                     "Error",
@@ -1028,6 +1037,8 @@ public class BackupUI extends javax.swing.JFrame {
         }
 
         this.ProgressBar.setValue(0);
+        this.ProgressBar1.setValue(0);
+        this.ProgressBar1.setVisible(true);
 
         Restore restore = new Restore(
                 this.chkOverrideDatabase.isSelected(),
@@ -1268,6 +1279,7 @@ public class BackupUI extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JProgressBar ProgressBar;
+    private javax.swing.JProgressBar ProgressBar1;
     private javax.swing.JButton btnAddServer;
     private javax.swing.JButton btnBackup;
     private javax.swing.JButton btnCancel;
@@ -1442,6 +1454,14 @@ public class BackupUI extends javax.swing.JFrame {
     public void setProgressBar(JProgressBar ProgressBar) {
         this.ProgressBar = ProgressBar;
     }
+    
+    public JProgressBar getSecondaryProgressBar() {
+        return ProgressBar1;
+    }
+
+    public void setSecondaryProgressBar(JProgressBar ProgressBar) {
+        this.ProgressBar1 = ProgressBar;
+    }
 
     private void saveConfiguration() throws Exception {
         // Locate the user that is asotiated to the selected server
@@ -1494,7 +1514,7 @@ public class BackupUI extends javax.swing.JFrame {
         Connection conn;
         try {
             conn = DBConnection.getBkConnection();
-        } catch (ClassNotFoundException | SQLException ex) {
+        } catch (SQLException | IOException ex) {
             String msg = ex.getMessage() + "\nBackup information will not be saved.\nloadData()";
             if (!this.standalone) {
                 JOptionPane.showMessageDialog(

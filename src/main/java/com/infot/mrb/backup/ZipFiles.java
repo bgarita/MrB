@@ -22,9 +22,11 @@ import javax.crypto.spec.SecretKeySpec;
 import log.Bitacora;
 
 /**
- * This class creates zip encrypted files. Thouse files can be extracted but not understood.
- * This class includes methods for decrypting passwords and files.
- * The zipped files will be stored in a zip folder on the application installation directoy.
+ * This class creates zip encrypted files. Thouse files can be extracted but not
+ * understood. This class includes methods for decrypting passwords and files.
+ * The zipped files will be stored in a zip folder on the application
+ * installation directoy.
+ *
  * @author AA07SZZ, 09-05-2023
  */
 public class ZipFiles {
@@ -32,6 +34,7 @@ public class ZipFiles {
     //private static final String PASSWORD = "dotcom-2023%09*05-{1.!$}"; // Must be 16, 24 or 32 length for AES-128, AES-192 or AES-256, respectively
     private final boolean removeAfterZip;
     private JProgressBar progressBar;
+    private JProgressBar secondaryProgressBar;
     private boolean encrypted;
     private final Encryption encryption = new Encryption();
     private final Bitacora log = new Bitacora();
@@ -55,12 +58,11 @@ public class ZipFiles {
     public boolean isEncrypted() {
         return encrypted;
     }
-    
+
     public void setEncryptFiles(boolean encrypt) {
         this.encrypted = encrypt;
     }
 
-    
     /**
      * Zips a file directory with all its files and subdirectories.The zipped
      * file will be stored in the zip directory.
@@ -107,8 +109,8 @@ public class ZipFiles {
     } // end zipFile
 
     /**
-     * Encrypts files and adds them to the archive. Original files will be deleted
-     * after compressing.
+     * Encrypts files and adds them to the archive. Original files will be
+     * deleted after compressing.
      *
      * @param sourceFile File File or directory to be zipped.
      * @param zos ZipOutputStream Stream where all files will be zipped.
@@ -126,16 +128,16 @@ public class ZipFiles {
                     addZipFile(f, zos);
                     continue;
                 }
-                
+
                 File fileToZip = new File(f.getCanonicalPath());
-                
+
                 if (this.encrypted) {
                     // Encrypt file before compressing and then delete it.
                     fileToZip = encryption.encryptFile(fileToZip);
                 }
 
                 log.info("Compressing " + fileToZip.getAbsolutePath());
-                
+
                 zos.putNextEntry(new ZipEntry(fileToZip.getCanonicalPath()));
                 byte[] bytes = Files.readAllBytes(Paths.get(fileToZip.getAbsolutePath()));
                 zos.write(bytes, 0, bytes.length);
@@ -165,7 +167,6 @@ public class ZipFiles {
         } // end if
 
     } // end addZipFile
-
 
     private void delete(File file) {
         // Check if .cif file exists and remove it too
@@ -210,6 +211,12 @@ public class ZipFiles {
             maxPoints = 1;
         }
 
+        if (secondaryProgressBar != null) {
+            // Not available in unit testing
+            this.secondaryProgressBar.setMaximum(maxPoints);
+            this.secondaryProgressBar.setValue(0);
+        }
+
         log.info("Extracting files..");
         String sourceFile = zipFile.getName();
         String outputFolder = sourceFile.split("_")[0];
@@ -222,6 +229,7 @@ public class ZipFiles {
 
         folder.mkdir();
 
+        log.info("Calculating number of files...");
         FileInputStream is = new FileInputStream(zipFile);
         int entries = 0;
         try (ZipInputStream zis = new ZipInputStream(is)) {
@@ -236,8 +244,14 @@ public class ZipFiles {
             entries = 1;
         }
 
+        if (secondaryProgressBar != null) {
+            // Nota available in unit testing
+            this.secondaryProgressBar.setMaximum(entries);
+        }
+
         double valueForEachEntry = (double) maxPoints / (double) entries;
         int pointsApplied = 0;
+        int extractedFiles = 0;
 
         FileInputStream fis = new FileInputStream(zipFile);
         try (ZipInputStream zis = new ZipInputStream(fis)) {
@@ -245,6 +259,7 @@ public class ZipFiles {
 
             while ((ze = zis.getNextEntry()) != null) {
                 String fileName = getFileName(ze.getName());
+                log.info("Extracting files " + fileName);
                 File newFile = new File(outputFolder + File.separator + fileName);
 
                 try (FileOutputStream fos = new FileOutputStream(newFile)) {
@@ -255,12 +270,16 @@ public class ZipFiles {
                         fos.write(buffer, 0, len);
                     }
                 }
+                extractedFiles++;
+                if (secondaryProgressBar != null) {
+                    this.secondaryProgressBar.setValue(extractedFiles);
+                }
+                
                 zis.closeEntry();
                 if (this.progressBar != null) {
                     this.progressBar.setValue(this.progressBar.getValue() + (int) valueForEachEntry);
                     pointsApplied += (int) valueForEachEntry;
                 }
-
             }
         }
         log.info("Extracting files.. complete!");
@@ -288,7 +307,6 @@ public class ZipFiles {
         this.progressBar = progressBar;
     }
 
-
     public String AESEncrypt(String text) throws Exception {
         SecretKey password = new SecretKeySpec(Encryption.getPASSWORD().getBytes(), "AES");
         Cipher cipher = Cipher.getInstance("AES");
@@ -305,8 +323,11 @@ public class ZipFiles {
         return new String(decryptedText);
     }
 
-    
     void setEncrypted(boolean isEncrypted) {
         this.encrypted = isEncrypted;
+    }
+
+    void setSecondaryProgressBar(JProgressBar secondaryProgressBar) {
+        this.secondaryProgressBar = secondaryProgressBar;
     }
 }

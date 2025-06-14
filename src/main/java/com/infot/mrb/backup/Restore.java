@@ -14,6 +14,9 @@ import log.Bitacora;
 /**
  *
  * @author AA07SZZ, 2023-09-21
+ * Use the comparar_tablas stored procedure (in saisystem) to validate all
+ * records were successfuly restored.
+ * Example: CALL comparar_tablas('credito_prod', 'credito_prod_restored');
  */
 public class Restore extends Thread {
     private final boolean overrideExistingDatabase;
@@ -84,6 +87,7 @@ public class Restore extends Thread {
     
     
     private void restoreFromZipFile() {
+        // Prevent other restores to be in place at the same time.
         backupUI.setRestoreInProgress(true);
         /*
         Values for the progress bar:
@@ -104,11 +108,11 @@ public class Restore extends Thread {
         
         backupUI.getProgressBar().setMaximum(totalPoints);
         
-        //System.out.println("Restore in progress..");
         log.info("Restore in progress..");
 
         ZipFiles zip = new ZipFiles(false);
         zip.setProgressBar(backupUI.getProgressBar());
+        zip.setSecondaryProgressBar(backupUI.getSecondaryProgressBar());
         
         try {
             
@@ -140,14 +144,20 @@ public class Restore extends Thread {
             // Decrypt files
             File folder = new File(directory);
             File[] files = folder.listFiles();
+            this.backupUI.getSecondaryProgressBar().setMaximum(files.length);
+            this.backupUI.getSecondaryProgressBar().setValue(0);
             maxPoints = 35;
             int pointsApplied = 0;
+            int extractedFiles = 0;
             double points = (double)maxPoints / (double)files.length;
             for (File f : files) {
                 encryption.decryptFile(f);
                 backupUI.getProgressBar().setValue(backupUI.getProgressBar().getValue() + (int) points);
                 pointsApplied += (int) points;
+                extractedFiles++;
+                this.backupUI.getSecondaryProgressBar().setValue(extractedFiles);
             }
+            
             backupUI.getProgressBar().setValue(backupUI.getProgressBar().getValue() + (maxPoints - pointsApplied));
 
             engine.executeDumpFile("start-up.sql", directory, newDatabase);
@@ -157,7 +167,10 @@ public class Restore extends Thread {
             backupUI.getProgressBar().setValue(backupUI.getProgressBar().getValue() + 5);
             
             maxPoints = 40;
-            engine.importJsonFiles(directory, backupUI.getProgressBar(), maxPoints);
+            //engine.importJsonFiles(directory, backupUI.getProgressBar(), maxPoints);
+            engine.importJsonFiles2(
+                    directory, backupUI.getProgressBar(), maxPoints, 
+                    this.backupUI.getSecondaryProgressBar());
             
             engine.executeDumpFile("views.sql", directory, newDatabase);
             backupUI.getProgressBar().setValue(backupUI.getProgressBar().getValue() + 1);
@@ -212,6 +225,8 @@ public class Restore extends Thread {
                     JOptionPane.ERROR_MESSAGE);
             log.error(ex.getMessage());
         }
+        
+        backupUI.getSecondaryProgressBar().setVisible(false);
     }
 
     private void restoreFromDirectory() {
@@ -262,7 +277,10 @@ public class Restore extends Thread {
             backupUI.getProgressBar().setValue(backupUI.getProgressBar().getValue() + 5);
             
             maxPoints = 40;
-            engine.importJsonFiles(sourceFolder.getName(), backupUI.getProgressBar(), maxPoints);
+            //engine.importJsonFiles(sourceFolder.getName(), backupUI.getProgressBar(), maxPoints);
+            engine.importJsonFiles2(
+                    sourceFolder.getName(), backupUI.getProgressBar(), maxPoints, 
+                    this.backupUI.getSecondaryProgressBar());
             
             engine.executeDumpFile("views.sql", sourceFolder.getName(), newDatabase);
             backupUI.getProgressBar().setValue(backupUI.getProgressBar().getValue() + 1);
@@ -295,6 +313,7 @@ public class Restore extends Thread {
                     JOptionPane.ERROR_MESSAGE);
             log.error(ex.getMessage());
         }
+        backupUI.getSecondaryProgressBar().setVisible(false);
     }
 
     public void setSourceFolder(File canonicalFile) {

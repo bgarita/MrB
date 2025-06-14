@@ -1,8 +1,12 @@
 package com.infot.mrb.MySQL;
 
+import com.infot.mrb.utilities.Props;
+import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Properties;
 
 public class MySQLConnectionExample {
 
@@ -10,11 +14,14 @@ public class MySQLConnectionExample {
         // Datos de conexión
         String jdbcUrl = "jdbc:mariadb://127.0.0.1:3308/bk";
         String username = "root";
-        String password = "bendicion";
-
+        
         try {
+            File propsFile = new File("privateKeys.properties");
+            Properties props = Props.getProps(propsFile);
+            String password = props.getProperty("mrb.root.password");
+            
             // Registrar el controlador JDBC
-            //Class.forName("com.mysql.cj.jdbc.Driver");
+            //Class.forName("com.mysql.cj.jdbc.Driver"); 
 
             // Establecer la conexión
             //Connection connection = DriverManager.getConnection(jdbcUrl, username, password);
@@ -27,7 +34,7 @@ public class MySQLConnectionExample {
                 // Cerrar la conexión
                 connection.close();
             }
-        } catch (SQLException e) {
+        } catch (IOException | SQLException e) {
             System.out.println("Error: No se pudo conectar a la base de datos.");
             e.printStackTrace();
         }
