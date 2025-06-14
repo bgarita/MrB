@@ -22,9 +22,11 @@ import javax.crypto.spec.SecretKeySpec;
 import log.Bitacora;
 
 /**
- * This class creates zip encrypted files. Thouse files can be extracted but not understood.
- * This class includes methods for decrypting passwords and files.
- * The zipped files will be stored in a zip folder on the application installation directoy.
+ * This class creates zip encrypted files. Thouse files can be extracted but not
+ * understood. This class includes methods for decrypting passwords and files.
+ * The zipped files will be stored in a zip folder on the application
+ * installation directoy.
+ *
  * @author AA07SZZ, 09-05-2023
  */
 public class ZipFiles {
@@ -36,7 +38,7 @@ public class ZipFiles {
     private boolean encrypted;
     private final Encryption encryption = new Encryption();
     private final Bitacora log = new Bitacora();
-    
+
     public ZipFiles() {
         this.removeAfterZip = false;
     }
@@ -56,12 +58,11 @@ public class ZipFiles {
     public boolean isEncrypted() {
         return encrypted;
     }
-    
+
     public void setEncryptFiles(boolean encrypt) {
         this.encrypted = encrypt;
     }
 
-    
     /**
      * Zips a file directory with all its files and subdirectories.The zipped
      * file will be stored in the zip directory.
@@ -108,8 +109,8 @@ public class ZipFiles {
     } // end zipFile
 
     /**
-     * Encrypts files and adds them to the archive. Original files will be deleted
-     * after compressing.
+     * Encrypts files and adds them to the archive. Original files will be
+     * deleted after compressing.
      *
      * @param sourceFile File File or directory to be zipped.
      * @param zos ZipOutputStream Stream where all files will be zipped.
@@ -127,16 +128,16 @@ public class ZipFiles {
                     addZipFile(f, zos);
                     continue;
                 }
-                
+
                 File fileToZip = new File(f.getCanonicalPath());
-                
+
                 if (this.encrypted) {
                     // Encrypt file before compressing and then delete it.
                     fileToZip = encryption.encryptFile(fileToZip);
                 }
 
                 log.info("Compressing " + fileToZip.getAbsolutePath());
-                
+
                 zos.putNextEntry(new ZipEntry(fileToZip.getCanonicalPath()));
                 byte[] bytes = Files.readAllBytes(Paths.get(fileToZip.getAbsolutePath()));
                 zos.write(bytes, 0, bytes.length);
@@ -166,7 +167,6 @@ public class ZipFiles {
         } // end if
 
     } // end addZipFile
-
 
     private void delete(File file) {
         // Check if .cif file exists and remove it too
@@ -210,9 +210,12 @@ public class ZipFiles {
         if (maxPoints <= 0) {
             maxPoints = 1;
         }
-        
-        this.secondaryProgressBar.setMaximum(maxPoints);
-        this.secondaryProgressBar.setValue(0);
+
+        if (secondaryProgressBar != null) {
+            // Not available in unit testing
+            this.secondaryProgressBar.setMaximum(maxPoints);
+            this.secondaryProgressBar.setValue(0);
+        }
 
         log.info("Extracting files..");
         String sourceFile = zipFile.getName();
@@ -240,8 +243,11 @@ public class ZipFiles {
         if (entries == 0) {
             entries = 1;
         }
-        
-        this.secondaryProgressBar.setMaximum(entries);
+
+        if (secondaryProgressBar != null) {
+            // Nota available in unit testing
+            this.secondaryProgressBar.setMaximum(entries);
+        }
 
         double valueForEachEntry = (double) maxPoints / (double) entries;
         int pointsApplied = 0;
@@ -265,7 +271,10 @@ public class ZipFiles {
                     }
                 }
                 extractedFiles++;
-                this.secondaryProgressBar.setValue(extractedFiles);
+                if (secondaryProgressBar != null) {
+                    this.secondaryProgressBar.setValue(extractedFiles);
+                }
+                
                 zis.closeEntry();
                 if (this.progressBar != null) {
                     this.progressBar.setValue(this.progressBar.getValue() + (int) valueForEachEntry);
@@ -298,7 +307,6 @@ public class ZipFiles {
         this.progressBar = progressBar;
     }
 
-
     public String AESEncrypt(String text) throws Exception {
         SecretKey password = new SecretKeySpec(Encryption.getPASSWORD().getBytes(), "AES");
         Cipher cipher = Cipher.getInstance("AES");
@@ -315,7 +323,6 @@ public class ZipFiles {
         return new String(decryptedText);
     }
 
-    
     void setEncrypted(boolean isEncrypted) {
         this.encrypted = isEncrypted;
     }
