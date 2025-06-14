@@ -1,0 +1,95 @@
+USE saisystem;
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS comparar_tablas $$
+CREATE PROCEDURE comparar_tablas(IN db_1 VARCHAR(50), IN db_2 VARCHAR(50))
+BEGIN
+    DECLARE v_row INT DEFAULT 0;
+    DECLARE v_max_row INT DEFAULT 0;
+    DECLARE v_table_name VARCHAR(50);
+    DECLARE v_count1 INT DEFAULT NULL;
+    DECLARE v_count2 INT DEFAULT NULL;
+    DECLARE sql_query TEXT;
+
+    -- 1. Crear tabla temporal de resultados
+    DROP TEMPORARY TABLE IF EXISTS temp_comparacion;
+    CREATE TEMPORARY TABLE temp_comparacion (
+        row_id INT AUTO_INCREMENT PRIMARY KEY,
+        table_name VARCHAR(50),
+        db_name_1 VARCHAR(50),
+        db_name_2 VARCHAR(50),
+        db_count_1 INT,
+        db_count_2 INT
+    );
+
+    -- 2. Crear tabla temporal para almacenar los resultados temporales del count(*)
+    DROP TEMPORARY TABLE IF EXISTS temp_resultado;
+    CREATE TEMPORARY TABLE temp_resultado (
+        conteo INT
+    );
+
+    -- 3. Insertar tablas del primer esquema
+    SET @s = CONCAT('INSERT INTO temp_comparacion (table_name, db_name_1, db_name_2)
+                 SELECT table_name, "', db_1, '", "', db_2, '"
+                   FROM information_schema.tables
+                  WHERE table_schema = "', db_1, '"
+                    AND table_type = ''BASE TABLE''');
+    PREPARE stmt FROM @s;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+
+    -- 4. Obtener número de filas a recorrer
+    SELECT MAX(row_id) INTO v_max_row FROM temp_comparacion;
+
+    -- 5. Loop por cada tabla
+    WHILE v_row < v_max_row DO
+        SET v_row = v_row + 1;
+
+        -- Obtener el nombre de la tabla
+        SELECT table_name INTO v_table_name
+        FROM temp_comparacion
+        WHERE row_id = v_row;
+
+        -- Contar en db_1
+        TRUNCATE temp_resultado;
+        SET @sql1 = CONCAT('INSERT INTO temp_resultado SELECT COUNT(*) FROM `', db_1, '`.`', v_table_name, '`');
+        PREPARE stmt1 FROM @sql1;
+        EXECUTE stmt1;
+        DEALLOCATE PREPARE stmt1;
+        SELECT conteo INTO v_count1 FROM temp_resultado;
+
+        -- Contar en db_2
+        TRUNCATE temp_resultado;
+        SET @sql2 = CONCAT('INSERT INTO temp_resultado SELECT COUNT(*) FROM `', db_2, '`.`', v_table_name, '`');
+        PREPARE stmt2 FROM @sql2;
+        EXECUTE stmt2;
+        DEALLOCATE PREPARE stmt2;
+        SELECT conteo INTO v_count2 FROM temp_resultado;
+
+        -- Actualizar los resultados
+        UPDATE temp_comparacion
+        SET db_count_1 = v_count1,
+            db_count_2 = v_count2
+        WHERE row_id = v_row;
+    END WHILE;
+
+    -- 6. Mostrar resultados finales
+    SELECT 
+        table_name,
+        db_name_1,
+        db_count_1,
+        db_name_2,
+        db_count_2,
+        db_count_1 - db_count_2 AS diferencia
+    FROM temp_comparacion
+    ORDER BY ABS(db_count_1 - db_count_2) DESC;
+
+END $$
+DELIMITER ;
+
+-- Run SP
+-- CALL comparar_tablas('credito_prod', 'credito_prod_restored');
+
+-- SELECT * FROM information_schema.tables; -- table_type = 'BASE_TABLE'
+-- DROP DATABASE credito_prod_restored;

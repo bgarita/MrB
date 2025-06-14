@@ -5,6 +5,8 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -19,60 +21,58 @@ public class ProcessJsonFile {
     public static void main(String[] args) throws Exception {
         JsonFactory factory = new JsonFactory();
         File jsonFile = new File("G:\\Backups\\MrB\\zip\\Restored 20241126\\producto.json");
-        
+        JsonParser parser = factory.createParser(jsonFile);
+
         // Usar el número de columnas para preparar el SQL
         int columns = getCount(jsonFile, "columns");
-        
+
         // Usar el número de filas para actualizar el progressBar
         int rows = getCount(jsonFile, "rows");
 
-        JsonParser parser = factory.createParser(jsonFile);
-
-        // Recorrer todo el archivo mediante tokens, no todo de un solo.
-        // Este permite hacer un uso eficiente de la memoria.
-        while (!parser.isClosed()) {
-            JsonToken token = parser.nextToken();
-
-            // Saltar al siguiten token si se da alguna de esta condiciones
-            if (JsonToken.START_OBJECT.equals(token)
-                    || JsonToken.START_ARRAY.equals(token)
-                    || JsonToken.END_OBJECT.equals(token)
-                    || JsonToken.END_ARRAY.equals(token)
-                    || JsonToken.FIELD_NAME.equals(token)
-                    || token == null) {
-                continue;
-            }
-
-            String columnName = null, columnType = null, columnValue = null;
-            do {
-                String fieldName = parser.getCurrentName();
-                String value = parser.getValueAsString();
-                if (fieldName.equals(value)) {
-                    continue;
-                }
-                switch (fieldName) {
-                    case "columnName" ->
-                        columnName = value;
-                    case "columnType" ->
-                        columnType = value;
-                    case "columnValue" ->
-                        columnValue = value;
-                    default -> {
-                    }
-                }
-                if (columnName != null) {
-                    System.out.println("Column name=" + columnName);
-                    System.out.println("Column type=" + columnType);
-                    System.out.println("Column value=" + columnValue);
-                }
-            } while (parser.nextToken() != JsonToken.END_OBJECT);
-
-            // Llegado a este punto ya las tres variables tienen el dato
-            // necesario para enviar el insert a la base de datos.
+        if (parser.nextToken() != JsonToken.START_ARRAY) {
+            throw new IllegalStateException("Se esperaba un arreglo en el JSON");
         }
 
-    }
+        // Iterar sobre cada registro (array interno)
+        while (parser.nextToken() == JsonToken.START_ARRAY) {
+            List<String> nombresColumnas = new ArrayList<>();
+            List<String> tiposDatos = new ArrayList<>();
+            List<String> valores = new ArrayList<>();
 
+            // Iterar sobre cada objeto (columna)
+            while (parser.nextToken() == JsonToken.START_OBJECT) {
+                String nombre = null, tipo = null, valor = null;
+
+                // Iterar sobre los campos dentro del objeto
+                while (parser.nextToken() != JsonToken.END_OBJECT) {
+                    String fieldName = parser.getCurrentName();
+                    parser.nextToken(); // movernos al valor del campo
+
+                    switch (fieldName) {
+                        case "columnName" -> nombre = parser.getText();
+                        case "columnType" -> tipo = parser.getText();
+                        case "columnValue" -> valor = parser.getText();
+                    }
+                }
+
+                if (nombre != null && tipo != null && valor != null) {
+                    nombresColumnas.add(nombre);
+                    tiposDatos.add(tipo);
+                    valores.add(valor);
+                }
+            }
+
+            // Aquí puedes trabajar con las 3 listas para cada registro
+            System.out.println("Registro:");
+            System.out.println("Columnas: " + nombresColumnas);
+            System.out.println("Tipos:    " + tiposDatos);
+            System.out.println("Valores:  " + valores);
+            System.out.println("------------------------");
+        }
+
+        parser.close();
+
+    }
 
     private static int getCount(File jsonFile, String type) throws IOException {
         int count = 0;
@@ -94,7 +94,7 @@ public class ProcessJsonFile {
         } else {
             msg += " columnas en JSON: " + count;
         }
-        
+
         System.out.println(msg);
         return count;
     }

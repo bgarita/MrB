@@ -32,10 +32,11 @@ public class ZipFiles {
     //private static final String PASSWORD = "dotcom-2023%09*05-{1.!$}"; // Must be 16, 24 or 32 length for AES-128, AES-192 or AES-256, respectively
     private final boolean removeAfterZip;
     private JProgressBar progressBar;
+    private JProgressBar secondaryProgressBar;
     private boolean encrypted;
     private final Encryption encryption = new Encryption();
     private final Bitacora log = new Bitacora();
-
+    
     public ZipFiles() {
         this.removeAfterZip = false;
     }
@@ -209,6 +210,9 @@ public class ZipFiles {
         if (maxPoints <= 0) {
             maxPoints = 1;
         }
+        
+        this.secondaryProgressBar.setMaximum(maxPoints);
+        this.secondaryProgressBar.setValue(0);
 
         log.info("Extracting files..");
         String sourceFile = zipFile.getName();
@@ -222,6 +226,7 @@ public class ZipFiles {
 
         folder.mkdir();
 
+        log.info("Calculating number of files...");
         FileInputStream is = new FileInputStream(zipFile);
         int entries = 0;
         try (ZipInputStream zis = new ZipInputStream(is)) {
@@ -235,9 +240,12 @@ public class ZipFiles {
         if (entries == 0) {
             entries = 1;
         }
+        
+        this.secondaryProgressBar.setMaximum(entries);
 
         double valueForEachEntry = (double) maxPoints / (double) entries;
         int pointsApplied = 0;
+        int extractedFiles = 0;
 
         FileInputStream fis = new FileInputStream(zipFile);
         try (ZipInputStream zis = new ZipInputStream(fis)) {
@@ -256,12 +264,13 @@ public class ZipFiles {
                         fos.write(buffer, 0, len);
                     }
                 }
+                extractedFiles++;
+                this.secondaryProgressBar.setValue(extractedFiles);
                 zis.closeEntry();
                 if (this.progressBar != null) {
                     this.progressBar.setValue(this.progressBar.getValue() + (int) valueForEachEntry);
                     pointsApplied += (int) valueForEachEntry;
                 }
-
             }
         }
         log.info("Extracting files.. complete!");
@@ -309,5 +318,9 @@ public class ZipFiles {
     
     void setEncrypted(boolean isEncrypted) {
         this.encrypted = isEncrypted;
+    }
+
+    void setSecondaryProgressBar(JProgressBar secondaryProgressBar) {
+        this.secondaryProgressBar = secondaryProgressBar;
     }
 }

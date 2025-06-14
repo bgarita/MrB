@@ -1,5 +1,8 @@
 package com.infot.mrb.database;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.infot.mrb.backup.FileParts;
@@ -15,8 +18,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.List;
 import log.Bitacora;
 import org.json.JSONArray;
@@ -36,6 +41,9 @@ public class MySQL {
     private List<String> columnTypes;   // Table column types
     private List<String> columnValues;  // Table column values
     private final FileParts fileParts;  // Sets file headear & footer info
+    
+    private static final String ROWS = "rows";
+    private static final String COLUMNS = "columns";
 
     // WARNING: use consoleOnly=true as the default in this class.
     private final Bitacora log;
@@ -455,6 +463,147 @@ public class MySQL {
             }
         }
     }
+    
+    
+    public void importJsonFiles2(
+            String folderName, javax.swing.JProgressBar progresBar, int maxPoints, 
+            javax.swing.JProgressBar secondaryProgresBar) throws SQLException, IOException {
+
+        File folder = new File(folderName);
+        File[] files = folder.listFiles();
+        int totalJsonFiles = 0;
+        for (File file : files) {
+            if (file.getName().endsWith(".json")) {
+                totalJsonFiles++;
+            }
+        }
+
+        double valueForEachJson = (double) maxPoints / (double) totalJsonFiles;
+        int pointsApplied = 0;
+
+        for (File jsonFile : files) {
+            if (!jsonFile.getName().endsWith(".json")) {
+                continue;
+            }
+            log.setConsoleOnly(false);
+            log.info("Restoring table " + jsonFile.getName().replace(".json", "") + "..");
+
+            loadJsonData2(jsonFile, secondaryProgresBar);
+
+            log.info("Restoring table " + jsonFile.getName().replace(".json", "") + ".. complete!");
+            log.setConsoleOnly(true);
+
+            progresBar.setValue(progresBar.getValue() + (int) valueForEachJson);
+            pointsApplied += (int) valueForEachJson;
+        }
+
+        progresBar.setValue(progresBar.getValue() + (maxPoints - pointsApplied));
+    }
+    
+    private void loadJsonData2(File jsonFile, javax.swing.JProgressBar secondaryProgresBar) throws SQLException, IOException {
+        JsonFactory factory = new JsonFactory();
+        try (JsonParser parser = factory.createParser(jsonFile)) {
+            String tableName = jsonFile.getName().replace(".json", "");
+            
+            // Estas variables se puede usar para calcular los registros que se van
+            // a agregar a la base de datos.
+            //int columns = getCount(jsonFile, "columns");
+            log.info("Calculating rows...");
+            int rows = getCount(jsonFile, "rows");
+            secondaryProgresBar.setMaximum(rows);
+            secondaryProgresBar.setValue(0);
+            
+            if (parser.nextToken() != JsonToken.START_ARRAY) {
+                throw new IllegalStateException("Se esperaba un arreglo en el JSON");
+            }
+            
+            conn.setAutoCommit(false); // Mejora de rendimiento
+            
+            log.info("Restoring...");
+            while (parser.nextToken() == JsonToken.START_ARRAY) {
+                List<String> nombresColumnas = new ArrayList<>();
+                List<String> tiposDatos = new ArrayList<>();
+                List<String> valores = new ArrayList<>();
+                
+                while (parser.nextToken() == JsonToken.START_OBJECT) {
+                    String nombre = null, tipo = null, valor = null;
+                    
+                    while (parser.nextToken() != JsonToken.END_OBJECT) {
+                        String fieldName = parser.getCurrentName();
+                        parser.nextToken();
+                        
+                        switch (fieldName) {
+                            case "columnName" -> nombre = parser.getText();
+                            case "columnType" -> tipo = parser.getText();
+                            case "columnValue" -> valor = parser.getText();
+                        }
+                    }
+                    
+                    if (nombre != null && tipo != null && valor != null) {
+                        nombresColumnas.add(nombre);
+                        tiposDatos.add(tipo);
+                        valores.add(valor);
+                    }
+                }
+                
+                String columnas = String.join(", ", nombresColumnas);
+                String placeholders = String.join(", ", Collections.nCopies(nombresColumnas.size(), "?"));
+                String sql = "INSERT INTO " + tableName + " (" + columnas + ") VALUES (" + placeholders + ")";
+                
+                try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                    for (int i = 0; i < valores.size(); i++) {
+                        String tipo = tiposDatos.get(i).toUpperCase();
+                        String value = valores.get(i);
+                        int parameterPosition = i + 1;
+                        
+                        switch (tipo) {
+                            case "BIT" -> {
+                                boolean bValue = value.equals("1") || value.equals("b'1'");
+                                ps.setBoolean(parameterPosition, bValue);
+                            }
+                            case "TINYINT", "SMALLINT", "MEDIUMINT", "INT" -> {
+                                ps.setInt(parameterPosition, Integer.parseInt(value));
+                            }
+                            case "BIGINT" -> {
+                                if (value.equalsIgnoreCase("NULL")) {
+                                    ps.setNull(parameterPosition, Types.NULL);
+                                } else {
+                                    ps.setLong(parameterPosition, Long.parseLong(value));
+                                }
+                            }
+                            case "FLOAT", "DOUBLE", "DECIMAL" -> {
+                                if (value.equalsIgnoreCase("NULL")) {
+                                    ps.setNull(parameterPosition, Types.NULL);
+                                } else {
+                                    ps.setDouble(parameterPosition, Double.parseDouble(value));
+                                }
+                            }
+                            case "BLOB", "LONGBLOB" -> {
+                                if (value.equalsIgnoreCase("NULL")) {
+                                    ps.setNull(parameterPosition, Types.NULL);
+                                } else {
+                                    byte[] binaryData = Base64.getDecoder().decode(value);
+                                    ps.setBytes(parameterPosition, binaryData);
+                                }
+                            }
+                            default -> {
+                                // Maneja VARCHAR, TEXT, CHAR, JSON, DATE, DATETIME, TIMESTAMP, etc.
+                                if (value.equalsIgnoreCase("NULL")) {
+                                    ps.setNull(parameterPosition, Types.NULL);
+                                } else {
+                                    ps.setString(parameterPosition, value);
+                                }
+                            }
+                        }
+                    }
+                    ps.executeUpdate();
+                    secondaryProgresBar.setValue(secondaryProgresBar.getValue() + 1);
+                }
+            }
+            conn.commit();
+        } // end try
+    }
+    
 
     private void pupulateListsFromJson(JsonNode jsonNode) {
         if (jsonNode.isObject()) {
@@ -489,6 +638,46 @@ public class MySQL {
         sql.append(");");
 
         return sql.toString();
+    }
+    
+    public String prepareSQL(String table, int columns) throws SQLException {
+        StringBuilder sql = new StringBuilder();
+        sql.append("INSERT INTO `").append(table).append("` VALUES (");
+        for (int i = 0; i < columns; i++) {
+            sql.append("?").append(i + 1 < columns ? "," : "");
+        }
+
+        sql.append(");");
+
+        return sql.toString();
+    }
+    
+    /**
+     * Count rows or columns.
+     * @param jsonFile File file to be processed
+     * @param type String type of count ('rows' or 'columns')
+     * @return int total count
+     * @throws IOException 
+     */
+    private int getCount(File jsonFile, String type) throws IOException {
+        int count = 0;
+        JsonFactory factory = new JsonFactory();
+        JsonParser parser = factory.createParser(jsonFile);
+        while (!parser.isClosed()) {
+            JsonToken token = parser.nextToken();
+            if (type.equals(ROWS) && JsonToken.START_ARRAY.equals(token)) {
+                count++;
+            } else if (type.equals(COLUMNS) && JsonToken.START_OBJECT.equals(token)) {
+                count++;
+            }
+        }
+        
+        // Remove 1 since first array contains other arrays
+        if (type.equals(ROWS)) {
+            count--;
+        }
+        
+        return count;
     }
 
     private int countColumns() {
@@ -578,6 +767,103 @@ public class MySQL {
             listsIndex++;
         } while (listsIndex < columnNames.size() && !firstColumnNameInGroup.equals(columnNames.get(listsIndex)));
     }
+    
+    /*private void setValue(PreparedStatement ps, String columnType, String value) throws SQLException {
+
+        switch (columnType) {
+                case "BIT" -> {
+                    boolean bValue = (value.equals("1") || value.equals("b'1'"));
+                    ps.setBoolean(parameterPosition, bValue);
+                }
+                case "TINYINT", "SMALLINT", "MEDIUMINT", "INT" ->
+                    ps.setInt(parameterPosition, Integer.parseInt(value));
+                case "BIGINT" -> {
+                    if (value.equalsIgnoreCase("NULL")) {
+                        ps.setNull(parameterPosition, java.sql.Types.NULL);
+                    } else {
+                        ps.setLong(parameterPosition, Long.parseLong(value));
+                    }
+                }
+                case "FLOAT", "DOUBLE", "DECIMAL" -> {
+                    if (value.equalsIgnoreCase("NULL")) {
+                        ps.setNull(parameterPosition, java.sql.Types.NULL);
+                    } else {
+                        ps.setDouble(parameterPosition, Double.parseDouble(value));
+                    }
+                }
+                case "BLOB", "LONGBLOB" -> {
+                    if (value.equalsIgnoreCase("NULL")) {
+                        ps.setNull(parameterPosition, java.sql.Types.NULL);
+                    } else {
+                        byte[] binaryData = Base64.getDecoder().decode(value);
+                        ps.setBytes(parameterPosition, binaryData);
+                    }
+                }
+                default -> {
+                    //JSON, DATE, DATETIME, TIMESTAMP, VARCHAR, etc
+                    if (value.equalsIgnoreCase("NULL")) {
+                        ps.setNull(parameterPosition, java.sql.Types.NULL);
+                    } else {
+                        ps.setString(parameterPosition, value);
+                    }
+                }
+            }
+        
+        int parameterPosition = 1;
+        String firstColumnNameInGroup = columnNames.get(listsIndex);
+
+        // Cycle until next group of columns is reached
+        do {
+            // Determine value & value type
+            String columnType = columnTypes.get(listsIndex).replace("\"", "").replace("\\", "");
+
+            String value = columnValues.get(listsIndex).replace("\"", "").replace("\\", "");
+            if (columnType.equals("JSON")) {
+                value = columnValues.get(listsIndex);
+            }
+
+            switch (columnType) {
+                case "BIT" -> {
+                    boolean bValue = (value.equals("1") || value.equals("b'1'"));
+                    ps.setBoolean(parameterPosition, bValue);
+                }
+                case "TINYINT", "SMALLINT", "MEDIUMINT", "INT" ->
+                    ps.setInt(parameterPosition, Integer.parseInt(value));
+                case "BIGINT" -> {
+                    if (value.equalsIgnoreCase("NULL")) {
+                        ps.setNull(parameterPosition, java.sql.Types.NULL);
+                    } else {
+                        ps.setLong(parameterPosition, Long.parseLong(value));
+                    }
+                }
+                case "FLOAT", "DOUBLE", "DECIMAL" -> {
+                    if (value.equalsIgnoreCase("NULL")) {
+                        ps.setNull(parameterPosition, java.sql.Types.NULL);
+                    } else {
+                        ps.setDouble(parameterPosition, Double.parseDouble(value));
+                    }
+                }
+                case "BLOB", "LONGBLOB" -> {
+                    if (value.equalsIgnoreCase("NULL")) {
+                        ps.setNull(parameterPosition, java.sql.Types.NULL);
+                    } else {
+                        byte[] binaryData = Base64.getDecoder().decode(value);
+                        ps.setBytes(parameterPosition, binaryData);
+                    }
+                }
+                default -> {
+                    //JSON, DATE, DATETIME, TIMESTAMP, VARCHAR, etc
+                    if (value.equalsIgnoreCase("NULL")) {
+                        ps.setNull(parameterPosition, java.sql.Types.NULL);
+                    } else {
+                        ps.setString(parameterPosition, value);
+                    }
+                }
+            }
+            parameterPosition++;
+            listsIndex++;
+        } while (listsIndex < columnNames.size() && !firstColumnNameInGroup.equals(columnNames.get(listsIndex)));
+    }*/
 
     // This method supports backward compatibility for databases migrated from MySQL into MariaDB 11.0
     public List<String> getDatabaseTables(String type) throws SQLException {

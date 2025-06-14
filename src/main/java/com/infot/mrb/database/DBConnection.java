@@ -125,7 +125,7 @@ public class DBConnection {
         Properties props = Props.getProps(propsFile);
         
         String user = props.getProperty("mr.bk.user");
-        String password = props.getProperty("bk.password");
+        String password = props.getProperty("mr.bk.password");
 
         String jdbcUrl = "jdbc:mariadb://127.0.0.1:3308/bk";
 
