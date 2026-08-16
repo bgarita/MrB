@@ -11,7 +11,7 @@ import java.sql.ResultSet;
 public class Combo {
 
     /**
-     * @param isEncrypted boolean indicates if data is comming encrypted or not.
+     * @param isEncrypted boolean indicates if data is coming encrypted or not.
      * @throws java.sql.SQLException
      * @Author: Bosco Garita 04/01/2011. Carga un comboBox con los datos de un
      * ResultSet
@@ -29,7 +29,7 @@ public class Combo {
             boolean replace,
             boolean isEncrypted) throws Exception {
 
-        String sql = "Select server_name from `bk`.`connection`";
+        String sql = "Select server_name from `bk`.`connection` order by id"; 
 
         Encryption encryption = new Encryption();
         boolean loadedData = false;

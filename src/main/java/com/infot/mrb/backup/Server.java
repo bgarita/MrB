@@ -55,7 +55,7 @@ public class Server extends javax.swing.JDialog {
         jLabel7 = new javax.swing.JLabel();
         btnAdd = new javax.swing.JButton();
         txtServerName = new javax.swing.JTextField();
-        txtIpAddress = new javax.swing.JTextField();
+        txtIpAddressOrServerName = new javax.swing.JTextField();
         txtPort = new javax.swing.JTextField();
         txtSchema = new javax.swing.JTextField();
         txtUser = new javax.swing.JTextField();
@@ -103,9 +103,9 @@ public class Server extends javax.swing.JDialog {
         jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
         jLabel1.setText("Configure server connections");
 
-        jLabel2.setText("Server Name");
+        jLabel2.setText("Host Name");
 
-        jLabel3.setText("IP Address");
+        jLabel3.setText("IP Address or server name");
 
         jLabel4.setText("Port");
 
@@ -140,27 +140,24 @@ public class Server extends javax.swing.JDialog {
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(jLabel1)
                                     .addGroup(layout.createSequentialGroup()
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(jLabel5)
+                                            .addComponent(jLabel2))
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                                            .addGroup(layout.createSequentialGroup()
-                                                .addComponent(jLabel2)
-                                                .addGap(22, 22, 22)
-                                                .addComponent(txtServerName, javax.swing.GroupLayout.PREFERRED_SIZE, 264, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                                                .addComponent(jLabel5)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                                    .addComponent(txtUser)
-                                                    .addComponent(txtSchema)
-                                                    .addComponent(txtPassword))))
+                                            .addComponent(txtServerName)
+                                            .addComponent(txtUser, javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(txtSchema, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 257, Short.MAX_VALUE)
+                                            .addComponent(txtPassword, javax.swing.GroupLayout.Alignment.LEADING))
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                         .addComponent(jLabel3)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(txtIpAddress, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(txtIpAddressOrServerName, javax.swing.GroupLayout.PREFERRED_SIZE, 221, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                         .addComponent(jLabel4)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                         .addComponent(txtPort, javax.swing.GroupLayout.PREFERRED_SIZE, 52, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                .addGap(0, 154, Short.MAX_VALUE)))
+                                .addGap(0, 4, Short.MAX_VALUE)))
                         .addContainerGap())
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
@@ -185,7 +182,7 @@ public class Server extends javax.swing.JDialog {
                     .addComponent(jLabel3)
                     .addComponent(jLabel4)
                     .addComponent(txtServerName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(txtIpAddress, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtIpAddressOrServerName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(txtPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addGroup(layout.createSequentialGroup()
@@ -219,13 +216,13 @@ public class Server extends javax.swing.JDialog {
     private void btnAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddActionPerformed
         // Test connection before adding it to the table
         String server = this.txtServerName.getText().trim();
-        String IP = this.txtIpAddress.getText().trim();
+        String databaseServerName = this.txtIpAddressOrServerName.getText().trim();
         String port = this.txtPort.getText().trim();
         String user = this.txtUser.getText().trim();
         String password = this.txtPassword.getText().trim();
         String schema = this.txtSchema.getText().trim();
 
-        try (Connection conn = DBConnection.getConnection(IP, port, user, password, schema)) {
+        try (Connection conn = DBConnection.getConnection(databaseServerName, port, user, password, schema)) {
 
             if (conn == null) {
                 JOptionPane.showMessageDialog(null,
@@ -245,7 +242,7 @@ public class Server extends javax.swing.JDialog {
         }
 
         // Valid if ip already exists to avoid data duplication
-        int existingConnectionRow = this.seek(tblConnections, IP, 2);
+        int existingConnectionRow = this.seek(tblConnections, databaseServerName, 2);
         if (existingConnectionRow >= 0) {
             this.tblConnections.setRowSelectionInterval(existingConnectionRow, existingConnectionRow);
             JOptionPane.showMessageDialog(null,
@@ -264,7 +261,7 @@ public class Server extends javax.swing.JDialog {
 
         this.tblConnections.setValueAt(-1, row, 0);
         this.tblConnections.setValueAt(server, row, 1);
-        this.tblConnections.setValueAt(IP, row, 2);
+        this.tblConnections.setValueAt(databaseServerName, row, 2);
         this.tblConnections.setValueAt(port, row, 3);
         this.tblConnections.setValueAt(schema, row, 4);
         this.tblConnections.setValueAt(user, row, 5);
@@ -468,7 +465,7 @@ public class Server extends javax.swing.JDialog {
     private javax.swing.JLabel jLabel7;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable tblConnections;
-    private javax.swing.JTextField txtIpAddress;
+    private javax.swing.JTextField txtIpAddressOrServerName;
     private javax.swing.JTextField txtPassword;
     private javax.swing.JTextField txtPort;
     private javax.swing.JTextField txtSchema;

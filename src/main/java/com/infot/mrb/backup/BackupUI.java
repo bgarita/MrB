@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -35,13 +36,16 @@ import javax.swing.table.DefaultTableModel;
 import log.Bitacora;
 
 /**
- * Backup and restore MySQL databases using pure Java. This application was
+ * Backup and restore databases using pure Java. This application was
  * tested with MySQL 8.0.29 and MariaDB 11.0.2
  *
  * @author Bosco Garita Azofeifa
  * @since Setp, 2023
  */
 public class BackupUI extends javax.swing.JFrame {
+
+    private static final String DBLIST_PREFIX = "server.";
+    private static final String DBLIST_SUFFIX = ".databases";
 
     private Boolean backupInProgress;
     private Boolean restoreInProgress;
@@ -50,6 +54,7 @@ public class BackupUI extends javax.swing.JFrame {
     private boolean standalone;
     private final Bitacora log = new Bitacora();
     private int backupLife; // In days
+    private boolean isInitializing;
 
     /**
      * Creates new form
@@ -57,6 +62,7 @@ public class BackupUI extends javax.swing.JFrame {
      * @param standalone
      */
     public BackupUI(boolean standalone) {
+        this.isInitializing = true;
         initComponents();
         
         // This progress bar will only be visible when restoring.
@@ -72,7 +78,7 @@ public class BackupUI extends javax.swing.JFrame {
         }
         );
 
-        this.standalone = standalone;
+        this.standalone = standalone; 
 
         // DEBUG:
         //this.standalone = true;
@@ -100,9 +106,10 @@ public class BackupUI extends javax.swing.JFrame {
         // according to the selected server (from the combo box).
         // If combo is null initialize it.
         setUser();
-
+        
         // Populate the database combos acconding to the selected server.
         loadDatabaseNames();
+        loadDatabaseListForSelectedServer();
 
         // Delete expired backups
         deleteExpiredBackups();
@@ -117,9 +124,11 @@ public class BackupUI extends javax.swing.JFrame {
         setRecordsPerBlock();
 
         // If MrB is working in standalone mode then start doing the work
-        if (standalone) {
+        if (this.standalone) {
             doAll();
         }
+        
+        this.isInitializing = false;
     }
 
     /**
@@ -1129,6 +1138,22 @@ public class BackupUI extends javax.swing.JFrame {
 
     private void cboServerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboServerActionPerformed
         this.setDefaultDescription();
+        
+        // Prevent loading issues
+        if (this.isInitializing) {
+            return;
+        }
+        
+        // Set the user and password fields with the right information
+        // according to the selected server (from the combo box).
+        setUser();
+        
+        // Populate the database combos acconding to the selected server.
+        loadDatabaseNames();
+
+        // Load database inclusion list for selected server.
+        loadDatabaseListForSelectedServer();
+
     }//GEN-LAST:event_cboServerActionPerformed
 
     private void cboBDActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboBDActionPerformed
@@ -1215,12 +1240,20 @@ public class BackupUI extends javax.swing.JFrame {
     }//GEN-LAST:event_btnRestoreFromActionPerformed
 
     private void cboBDIncludeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboBDIncludeActionPerformed
-        Set<String> dbs = new TreeSet<>(); // Avoid duplicates and sort items
+        if (this.isInitializing || this.cboBDInclude.getSelectedItem() == null) {
+            return;
+        }
+
+        Set<String> dbs = new LinkedHashSet<>(); // Avoid duplicates preserving insertion order.
         DefaultListModel<String> model = (DefaultListModel<String>) this.lstDatabases.getModel();
         for (int i = 0; i < model.size(); i++) {
             dbs.add(model.get(i));
         }
-        dbs.add(cboBDInclude.getSelectedItem().toString());
+        String selectedDatabase = cboBDInclude.getSelectedItem().toString().trim();
+        if (selectedDatabase.isBlank()) {
+            return;
+        }
+        dbs.add(selectedDatabase);
         model.clear();
         dbs.forEach(db -> model.addElement(db));
         this.lstDatabases.setModel(model);
@@ -1352,7 +1385,7 @@ public class BackupUI extends javax.swing.JFrame {
     // End of variables declaration//GEN-END:variables
 
     /**
-     * Set user and password according to the options the user selected, this
+     * Set user and password according to the options the user selected, these
      * parameters are taken from the last valid user entry (saved). Last valid
      * configuration (user & password) are crypted and stored in the system
      * database.
@@ -1362,7 +1395,7 @@ public class BackupUI extends javax.swing.JFrame {
      */
     private void setUser() {
 
-        // Populate the cboServer object only if it has not been pupulated previously.
+        // Populate the cboServer object only if it has not been populated previously.
         if (cboServer == null || cboServer.getItemCount() == 0) {
             try {
                 Combo.populate(cboServer, true, false);
@@ -1652,7 +1685,7 @@ public class BackupUI extends javax.swing.JFrame {
 
     private void loadDatabaseNames() {
 
-        if (this.cboServer.getSelectedIndex() < 0) {
+        if (this.cboServer.getSelectedIndex() < 0 || this.cboServer.getSelectedItem() == null) {
             return;
         }
         // Get selected server name
@@ -1668,7 +1701,8 @@ public class BackupUI extends javax.swing.JFrame {
         ResultSet rs;
 
         try {
-            // Create connection acording to the selected environment
+            // Create connection according to the selected environment
+            // Always connect to information_schema to avoid issues when changing servers
             Connection conn = DBConnection.getConnection(
                     this.txtUser.getText(),
                     this.txtPassword.getPassword(), serverName, getSchema());
@@ -1678,6 +1712,7 @@ public class BackupUI extends javax.swing.JFrame {
 
             fillComboBox(cboBD, rs, 1, true);
             fillComboBox(cboBDInclude, rs, 1, true);
+            //this.cboBDInclude.setSelectedIndex(-1);
             ps.close();
         } catch (Exception ex) {
             if (!this.standalone) {
@@ -1719,7 +1754,7 @@ public class BackupUI extends javax.swing.JFrame {
         Encryption encryption = new Encryption();
         this.connectionRecords = new ArrayList<>();
 
-        String sql = "Select * from bk.connection";
+        String sql = "Select * from bk.connection order by id";
         try (Connection bkCon = DBConnection.getBkConnection(); PreparedStatement ps = bkCon.prepareStatement(sql,
                 ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
             ResultSet rs = ps.executeQuery();
@@ -1880,23 +1915,26 @@ public class BackupUI extends javax.swing.JFrame {
 
         try {
             serverProps = Props.getProps(new File(serverPropsFile));
-            this.cboServer.setSelectedItem(serverProps.getProperty("server"));
+            String configuredServer = serverProps.getProperty("server", "").trim();
+            if (configuredServer.isBlank()) {
+                throw new Exception("No server configured in " + serverPropsFile + ".");
+            }
+            this.cboServer.setSelectedItem(configuredServer);
             if (this.cboServer.getSelectedIndex() < 0) {
-                String msg = "No configuration found for server [" + serverProps.getProperty("server") + "]"
+                String msg = "No configuration found for server [" + configuredServer + "]"
                         + "Make sure " + serverPropsFile + " contains the right server name.";
                 throw new Exception(msg);
             }
-            this.cboServerActionPerformed(null);
+            setUser();
+            loadDatabaseNames();
+            loadDatabaseListForSelectedServer();
 
             dbListProps = Props.getProps(new File(databasePropsFile));
-            Enumeration<?> en = dbListProps.propertyNames();
-            List<String> databases = new ArrayList<>();
-
-            while (en.hasMoreElements()) {
-                String key = (String) en.nextElement();
-                String value = dbListProps.getProperty(key);
-                databases.add(value);
-            } // end while
+            List<String> databases = getDatabasesFromProperties(dbListProps, configuredServer, true);
+            if (databases.isEmpty()) {
+                String msg = "No databases configured for server [" + configuredServer + "] in " + databasePropsFile + ".";
+                throw new Exception(msg);
+            }
 
             // Now lets validate the database list at the time the job is being executed.
             for (String database : databases) {
@@ -1904,9 +1942,8 @@ public class BackupUI extends javax.swing.JFrame {
                 checkWaiting();
                 this.cboBD.setSelectedItem(database);
                 if (this.cboBD.getSelectedIndex() < 0) {
-                    String msg = "No configuration found for database [" + database + "]"
-                            + "Make sure " + databasePropsFile + " contains the right database names.";
-                    throw new Exception(msg);
+                    log.warn("Database [" + database + "] is not available in server [" + configuredServer + "]. Skipping.");
+                    continue;
                 }
                 this.cboBDActionPerformed(null);
 
@@ -2121,18 +2158,8 @@ public class BackupUI extends javax.swing.JFrame {
                 this.backupLife = this.backupLife * 30; // 360 base.
             }
 
-            // database list
-            propsFileName = "dblist.properties";
-            props = Props.getProps(new File(propsFileName));
-            Enumeration<?> en = props.propertyNames();
-            DefaultListModel<String> model = new DefaultListModel<>();
-            while (en.hasMoreElements()) {
-                String key = (String) en.nextElement();
-                String value = props.getProperty(key);
-                model.addElement(value);
-            } // end while
-            this.lstDatabases.setModel(model);
-            props.clear();
+            // database list (per-server) is loaded once server combo is initialized.
+            this.lstDatabases.setModel(new DefaultListModel<>());
 
             // Scheduling
             propsFileName = "schedule.properties";
@@ -2187,12 +2214,34 @@ public class BackupUI extends javax.swing.JFrame {
 
             // database list
             propsFileName = "dblist.properties";
-            ListModel<String> model = this.lstDatabases.getModel();
-            for (int i = 0; i < model.getSize(); i++) {
-                String dbName = model.getElementAt(i);
-                props.setProperty(dbName + ".key", dbName);
+            File dbListFile = new File(propsFileName);
+            if (dbListFile.exists()) {
+                props = Props.getProps(dbListFile);
+            } else {
+                props = new Properties();
             }
-            props.store(new FileOutputStream(propsFileName), "Databases which will backed-up");
+
+            String selectedServer = getSelectedServerName();
+            if (selectedServer.isBlank()) {
+                throw new IOException("No server selected. Unable to save database list.");
+            }
+
+            String serverKey = getServerDatabasesKey(selectedServer);
+            ListModel<String> model = this.lstDatabases.getModel();
+            StringBuilder dbList = new StringBuilder();
+            for (int i = 0; i < model.getSize(); i++) {
+                String dbName = model.getElementAt(i).trim();
+                if (dbName.isBlank()) {
+                    continue;
+                }
+                if (!dbList.isEmpty()) {
+                    dbList.append(",");
+                }
+                dbList.append(dbName);
+            }
+
+            props.setProperty(serverKey, dbList.toString());
+            props.store(new FileOutputStream(propsFileName), "Databases per server which will be backed-up");
             props.clear();
 
             // Scheduling
@@ -2236,5 +2285,99 @@ public class BackupUI extends javax.swing.JFrame {
                 "Configuration saved.", 
                 "Info", 
                 JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private String getSelectedServerName() {
+        if (this.cboServer == null || this.cboServer.getSelectedItem() == null) {
+            return "";
+        }
+        return this.cboServer.getSelectedItem().toString().trim();
+    }
+
+    private String getServerDatabasesKey(String serverName) {
+        return DBLIST_PREFIX + serverName.trim() + DBLIST_SUFFIX;
+    }
+
+    private List<String> getDatabasesFromProperties(Properties props, String serverName, boolean allowLegacyFallback) {
+        List<String> databases = new ArrayList<>();
+        if (props == null) {
+            return databases;
+        }
+
+        String normalizedServer = serverName == null ? "" : serverName.trim();
+        if (normalizedServer.isBlank()) {
+            return databases;
+        }
+
+        String serverDatabases = props.getProperty(getServerDatabasesKey(normalizedServer), "").trim();
+        if (!serverDatabases.isBlank()) {
+            String[] values = serverDatabases.split(",");
+            for (String value : values) {
+                String db = value.trim();
+                if (!db.isBlank() && !databases.contains(db)) {
+                    databases.add(db);
+                }
+            }
+            return databases;
+        }
+
+        // If at least one per-server key already exists, avoid falling back to legacy global list.
+        Enumeration<?> keys = props.propertyNames();
+        while (keys.hasMoreElements()) {
+            String key = (String) keys.nextElement();
+            if (key.startsWith(DBLIST_PREFIX) && key.endsWith(DBLIST_SUFFIX)) {
+                return databases;
+            }
+        }
+
+        if (!allowLegacyFallback) {
+            return databases;
+        }
+
+        // Backward compatibility: old format without server keys (dbName.key=dbName).
+        Set<String> uniqueLegacyDbs = new TreeSet<>();
+        Enumeration<?> en = props.propertyNames();
+        while (en.hasMoreElements()) {
+            String key = (String) en.nextElement();
+            String value = props.getProperty(key, "").trim();
+            if (key.endsWith(".key") && !value.isBlank()) {
+                uniqueLegacyDbs.add(value);
+            }
+        }
+        databases.addAll(uniqueLegacyDbs);
+        return databases;
+    }
+
+    private void loadDatabaseListForSelectedServer() {
+        String serverName = getSelectedServerName();
+        DefaultListModel<String> model = new DefaultListModel<>();
+
+        if (serverName.isBlank()) {
+            this.lstDatabases.setModel(model);
+            return;
+        }
+
+        try {
+            File dbListFile = new File("dblist.properties");
+            if (!dbListFile.exists()) {
+                this.lstDatabases.setModel(model);
+                return;
+            }
+
+            Properties props = Props.getProps(dbListFile);
+            List<String> databases = getDatabasesFromProperties(props, serverName, false);
+            for (String db : databases) {
+                model.addElement(db);
+            }
+            this.lstDatabases.setModel(model);
+        } catch (Exception ex) {
+            this.lstDatabases.setModel(model);
+            String msg = "Unable to load database list for server [" + serverName + "]. " + ex.getMessage();
+            if (!this.standalone) {
+                JOptionPane.showMessageDialog(null, msg, "Warning", JOptionPane.WARNING_MESSAGE);
+            } else {
+                log.warn(msg);
+            }
+        }
     }
 }
