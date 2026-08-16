@@ -21,9 +21,73 @@ public class DBConnection {
 
     private final static Bitacora log = new Bitacora();
 
+    private static String normalizeHost(String host) {
+        if (host == null) {
+            return "";
+        }
+
+        String normalizedHost = host.trim();
+        if (normalizedHost.startsWith("jdbc:mariadb://")) {
+            normalizedHost = normalizedHost.substring("jdbc:mariadb://".length());
+        }
+
+        if (normalizedHost.startsWith("//")) {
+            normalizedHost = normalizedHost.substring(2);
+        }
+
+        return normalizedHost;
+    }
+
+    private static boolean isIpLiteral(String host) {
+        if (host == null || host.isBlank()) {
+            return false;
+        }
+
+        String normalizedHost = host.trim();
+        if (normalizedHost.startsWith("[") && normalizedHost.endsWith("]")) {
+            normalizedHost = normalizedHost.substring(1, normalizedHost.length() - 1);
+        }
+
+        return normalizedHost.matches("^\\d{1,3}(\\.\\d{1,3}){3}$")
+                || normalizedHost.matches("(?i)^[0-9a-f:]+$") && normalizedHost.contains(":");
+    }
+
+    private static boolean shouldUseSsl(String host) {
+        if (host == null || host.isBlank()) {
+            return false;
+        }
+
+        String normalizedHost = normalizeHost(host).toLowerCase();
+
+        if (normalizedHost.equals("localhost")
+                || normalizedHost.equals("127.0.0.1")
+                || normalizedHost.equals("::1")
+                || normalizedHost.equals("0:0:0:0:0:0:0:1")) {
+            return false;
+        }
+
+        return normalizedHost.contains(".") && !isIpLiteral(normalizedHost);
+    }
+
+    private static String buildJdbcUrl(String host, String port, String schema) {
+        String normalizedHost = normalizeHost(host);
+        StringBuilder jdbcUrl = new StringBuilder("jdbc:mariadb://")
+                .append(normalizedHost)
+                .append(":")
+                .append(port)
+                .append("/")
+                .append(schema);
+
+        if (shouldUseSsl(normalizedHost)) {
+            jdbcUrl.append("?sslMode=verify-full");
+        }
+
+        return jdbcUrl.toString();
+    }
+
     /*
     Every encrypted text could be different each time then we cannot test against an encrypted text, 
-    inestead we must compare the decrypted text.
+    instead we must compare the decrypted text.
      */
     private static ConnectionRecord getConnectionRecord(String serverName) throws Exception {
         boolean retrieveAllRecords = (serverName == null || serverName.isBlank());
@@ -37,7 +101,7 @@ public class DBConnection {
 
             ResultSet rs = ps.executeQuery();
             if (rs != null && rs.first()) {
-                // All columns, except id and server_name, are encryped, decrypt them.
+                // All columns, except id and server_name, are encrypted, decrypt them.
                 connectionRecord.setId(Integer.parseInt(rs.getString("id")));
                 connectionRecord.setServerName(rs.getString("server_name"));
                 connectionRecord.setIp(encryption.decryptText(rs.getString("ip")));
@@ -73,16 +137,50 @@ public class DBConnection {
             connectionRecord.setDefaultSchema("bk");
         }
 
-        String jdbcUrl = "jdbc:mariadb://" + connectionRecord.getIp() + ":" + connectionRecord.getPort() + "/" + connectionRecord.getDefaultSchema();
+        String jdbcUrl = buildJdbcUrl(connectionRecord.getIp(), connectionRecord.getPort(), connectionRecord.getDefaultSchema());
         log.info("Trying connection...");
 
-        Connection connection;
+        Connection connection = null;
+        int maxRetries = 3; // Número máximo de intentos
+        int currentAttempt = 1;
+        int waitTimeMs = 5000; // Esperar 5 segundos (5000 ms) entre intentos
 
-        // Set (remote) connection to extract data
-        connection = DriverManager.getConnection(jdbcUrl, user, connectionRecord.getPassword());
+        // 1. Aumentar el tiempo de espera del Driver (por ejemplo, a 30 segundos)
+        // Nota: Esto establece el límite máximo de espera para el login.
+        DriverManager.setLoginTimeout(30);
 
-        if (connection != null) {
-            log.info("Connection successfull.");
+        while (connection == null && currentAttempt <= maxRetries) {
+            try {
+                log.info("Intentando conectar a la base de datos (Intento " + currentAttempt + " de " + maxRetries + ")...");
+
+                // Intento de conexión
+                // Set (remote) connection to extract data
+                connection = DriverManager.getConnection(jdbcUrl, user, connectionRecord.getPassword());
+
+                log.info("¡Conexión establecida con éxito!");
+
+            } catch (SQLException e) {
+                log.error("Fallo al conectar: " + e.getMessage());
+
+                if (currentAttempt == maxRetries) {
+                    log.error("Se alcanzó el número máximo de reintentos. Abortando..");
+                    throw e;
+                }
+
+                log.info("La base de datos tardó en responder. Reintentando en " + (waitTimeMs / 1000) + " segundos...");
+
+                try {
+                    // Pausar la ejecución antes del siguiente intento
+                    Thread.sleep(waitTimeMs);
+                } catch (InterruptedException ie) {
+                    // Restaurar el estado de interrupción del hilo
+                    Thread.currentThread().interrupt();
+                    log.error("El hilo de espera fue interrumpido.");
+                    break;
+                }
+
+                currentAttempt++;
+            }
         }
 
         String msg = "Connected to (" + connectionRecord.getServerName() + ") " + connectionRecord.getIp();
@@ -92,11 +190,9 @@ public class DBConnection {
         return connection;
     }
 
-    public static Connection getConnection(String IP, String port, String user, String password, String schema) throws SQLException {
+    public static Connection getConnection(String databaseServerName, String port, String user, String password, String schema) throws SQLException {
 
-        String database = schema;
-
-        String jdbcUrl = "jdbc:mariadb://127.0.0.1:" + port + "/" + database;
+        String jdbcUrl = buildJdbcUrl(databaseServerName, port, schema);
 
         log.info("Trying connection...");
         Connection connection;
@@ -105,14 +201,14 @@ public class DBConnection {
         connection = DriverManager.getConnection(jdbcUrl, user, password);
 
         if (connection != null) {
-            log.info("Connection successfull.");
+            log.info("Connection successfully.");
         }
 
         return connection;
     }
 
     /**
-     * This connection is used by the system only.Creates a connection to a
+     * This connection is used by the system only. Creates a connection to a
      * local MySQL instance to maintain its database.
      *
      * @return
@@ -127,6 +223,7 @@ public class DBConnection {
         String user = props.getProperty("mr.bk.user");
         String password = props.getProperty("mr.bk.password");
 
+        // Se asume que el servidor de base de datos es local
         String jdbcUrl = "jdbc:mariadb://127.0.0.1:3308/bk";
 
         Connection connection;

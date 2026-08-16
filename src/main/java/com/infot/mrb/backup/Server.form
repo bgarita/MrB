@@ -36,33 +36,28 @@
                               <Group type="103" groupAlignment="0" attributes="0">
                                   <Component id="jLabel1" min="-2" max="-2" attributes="0"/>
                                   <Group type="102" alignment="0" attributes="0">
+                                      <Group type="103" groupAlignment="0" attributes="0">
+                                          <Component id="jLabel5" alignment="0" min="-2" max="-2" attributes="0"/>
+                                          <Component id="jLabel2" alignment="0" min="-2" max="-2" attributes="0"/>
+                                      </Group>
+                                      <EmptySpace max="-2" attributes="0"/>
                                       <Group type="103" groupAlignment="1" max="-2" attributes="0">
-                                          <Group type="102" attributes="0">
-                                              <Component id="jLabel2" min="-2" max="-2" attributes="0"/>
-                                              <EmptySpace min="-2" pref="22" max="-2" attributes="0"/>
-                                              <Component id="txtServerName" min="-2" pref="264" max="-2" attributes="0"/>
-                                          </Group>
-                                          <Group type="102" alignment="0" attributes="0">
-                                              <Component id="jLabel5" min="-2" max="-2" attributes="0"/>
-                                              <EmptySpace max="-2" attributes="0"/>
-                                              <Group type="103" groupAlignment="0" attributes="0">
-                                                  <Component id="txtUser" max="32767" attributes="0"/>
-                                                  <Component id="txtSchema" max="32767" attributes="0"/>
-                                                  <Component id="txtPassword" alignment="0" max="32767" attributes="0"/>
-                                              </Group>
-                                          </Group>
+                                          <Component id="txtServerName" max="32767" attributes="0"/>
+                                          <Component id="txtUser" alignment="0" max="32767" attributes="0"/>
+                                          <Component id="txtSchema" alignment="0" pref="257" max="32767" attributes="0"/>
+                                          <Component id="txtPassword" alignment="0" max="32767" attributes="0"/>
                                       </Group>
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Component id="jLabel3" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
-                                      <Component id="txtIpAddress" min="-2" pref="145" max="-2" attributes="0"/>
+                                      <Component id="txtIpAddressOrServerName" min="-2" pref="221" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Component id="jLabel4" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Component id="txtPort" min="-2" pref="52" max="-2" attributes="0"/>
                                   </Group>
                               </Group>
-                              <EmptySpace min="0" pref="154" max="32767" attributes="0"/>
+                              <EmptySpace min="0" pref="4" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
@@ -96,7 +91,7 @@
                   <Component id="jLabel3" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="jLabel4" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="txtServerName" alignment="3" min="-2" max="-2" attributes="0"/>
-                  <Component id="txtIpAddress" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="txtIpAddressOrServerName" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="txtPort" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <Group type="103" groupAlignment="0" max="-2" attributes="0">
@@ -217,12 +212,12 @@
     </Component>
     <Component class="javax.swing.JLabel" name="jLabel2">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Server Name"/>
+        <Property name="text" type="java.lang.String" value="Host Name"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JLabel" name="jLabel3">
       <Properties>
-        <Property name="text" type="java.lang.String" value="IP Address"/>
+        <Property name="text" type="java.lang.String" value="IP Address or server name"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JLabel" name="jLabel4">
@@ -255,7 +250,7 @@
     </Component>
     <Component class="javax.swing.JTextField" name="txtServerName">
     </Component>
-    <Component class="javax.swing.JTextField" name="txtIpAddress">
+    <Component class="javax.swing.JTextField" name="txtIpAddressOrServerName">
     </Component>
     <Component class="javax.swing.JTextField" name="txtPort">
       <Properties>

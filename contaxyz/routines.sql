@@ -3829,7 +3829,8 @@ BEGIN
             ' '     , -- Persona que solicita (se usa en salidas)
 
 
-            vCodigoTC); -- Código de moneda
+            vCodigoTC,
+            Trim(user())); -- Código de moneda
 
 
             -- Select 'Terminó de con el encaezado';
@@ -4018,7 +4019,8 @@ BEGIN
             ' '     , -- Persona que solicita (se usa en salidas)
 
 
-            vCodigoTC); -- Código de moneda
+            vCodigoTC,
+            Trim(user())); -- Código de moneda
 
 
             
@@ -16774,9 +16776,8 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `InsertarEncabezadoDocInv`(
   IN  `pMovsolic`  varchar(30),
 
 
-  IN  `pCodigoTC`  varchar(3)
-
-
+  IN  `pCodigoTC`  varchar(3),
+  IN  `pUsername`  varchar(50)
 )
 BEGIN
 
@@ -16881,20 +16882,10 @@ BEGIN
 
 
       pTipoca  ,
-
-
-      Trim(user()),
-
-
+      pUsername,
       pMovtido ,
-
-
       pMovsolic,
-
-
       now()    ,
-
-
       pCodigoTC );
 
 
